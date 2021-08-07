@@ -89,6 +89,8 @@ class Shape:
         hexes in the shape (if tied, maximize y components next.)
 
         """
+        # TODO: there should be a more efficient algorithm here that just checks the
+        # vector sum on each axis and then knows exactly how to rotate.
         cur = self
         best_rotation = cur
         best_sum = cur.sum()

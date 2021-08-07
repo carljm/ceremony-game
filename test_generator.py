@@ -4,6 +4,15 @@ from typing import Sequence
 from generator import Hex, InvalidHexError, Shape
 
 
+OR = Hex(0, 0, 0)
+UP = Hex(0, 1, -1)
+UR = UP.rotate()
+DR = UR.rotate()
+DN = DR.rotate()
+DL = DN.rotate()
+UL = DL.rotate()
+
+
 class TestHex:
     @pytest.mark.parametrize(
         "x,y,z",
@@ -77,10 +86,25 @@ class TestHex:
             (Hex(1, 0, -1), Hex(1, -1, 0)),
             (Hex(1, -1, 0), Hex(0, -1, 1)),
             (Hex(1, 2, -3), Hex(3, -1, -2)),
+            (UP, UR),
+            (UR, DR),
+            (DR, DN),
+            (DN, DL),
+            (DL, UL),
+            (UL, UP),
         ],
     )
     def test_rotate(self, inh: Hex, outh: Hex) -> None:
         assert inh.rotate() == outh
+
+    def test_conveniences(self) -> None:
+        assert OR == Hex(0, 0, 0)
+        assert UP == Hex(0, 1, -1)
+        assert UR == Hex(1, 0, -1)
+        assert DR == Hex(1, -1, 0)
+        assert DN == Hex(0, -1, 1)
+        assert DL == Hex(-1, 0, 1)
+        assert UL == Hex(-1, 1, 0)
 
 
 class TestShape:
@@ -128,6 +152,14 @@ class TestShape:
             (
                 Shape([Hex(0, -1, 1), Hex(0, -2, 2), Hex(-1, -2, 3)]),
                 Shape([Hex(0, 0, 0), Hex(1, 0, -1), Hex(2, -1, -1)]),
+            ),
+            (
+                Shape([OR, DR, DR + UR, DR + UR + UR]),
+                Shape([OR, DR, DR + UR, DR + UR + UR]),
+            ),
+            (
+                Shape([OR, UP, UP + UR, UP + UR + UR]),
+                Shape([OR, UR, UR + DR, UR + DR + DR]),
             ),
         ],
     )
