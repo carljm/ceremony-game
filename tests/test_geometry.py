@@ -1,7 +1,7 @@
 import pytest
 from typing import Sequence
 
-from generator import Hex, InvalidHexError, Shape
+from ceremony.geometry import Hex, InvalidHexError, Shape
 
 
 OR = Hex(0, 0, 0)
