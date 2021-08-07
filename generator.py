@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import total_ordering
+from functools import reduce, total_ordering
 from typing import Sequence
 
 
@@ -43,6 +43,10 @@ class Hex:
     def is_origin(self) -> bool:
         return self.x == self.y == self.z == 0
 
+    def rotate(self) -> Hex:
+        """Return next clockwise rotation of this hex around origin."""
+        return Hex(-self.z, -self.x, -self.y)
+
 
 @dataclass(frozen=True)
 class Shape:
@@ -54,14 +58,15 @@ class Shape:
         """Return a new Shape with all nodes translated by h."""
         return Shape([n + h for n in self.nodes])
 
-    def normalize(self) -> Shape:
-        """Return the same Shape in normal form.
+    def rotate(self) -> Shape:
+        """Return next clockwise rotation of this shape (not normalized.)"""
+        return Shape([h.rotate() for h in self.nodes])
 
-        In normal form, hexes are ordered by (x, y, z) tuple and shape is translated
-        such that first hex is (0, 0, 0).
+    def normalize_translation(self) -> Shape:
+        """Return the same Shape in translationally normal form.
 
-        This means that translationally-equivalent shapes will always be identical in
-        normal form.
+        In translationally normal form, hexes are ordered by (x, y, z) tuple and shape
+        is translated such that first hex is (0, 0, 0).
 
         """
         nodes = sorted(self.nodes)
@@ -72,3 +77,29 @@ class Shape:
         if n.is_origin():
             return s
         return s.translate(-n)
+
+    def sum(self) -> Hex:
+        """Return the vector sum of all hexes in this shape."""
+        return reduce(lambda a, b: a + b, self.nodes, Hex(0, 0, 0))
+
+    def normalize_rotation(self) -> Shape:
+        """Return the same Shape in rotationally normal form.
+
+        This is the rotated form which maximizes the sum of the x components of all
+        hexes in the shape (if tied, maximize y components next.)
+
+        """
+        cur = self
+        best_rotation = cur
+        best_sum = cur.sum()
+        for i in range(5):
+            cur_sum = cur.sum()
+            if cur_sum > best_sum:
+                best_sum = cur_sum
+                best_rotation = cur
+            cur = cur.rotate()
+        return best_rotation
+
+    def normalize(self) -> Shape:
+        """Return same shape in translationally and rotationally normal form."""
+        return self.normalize_rotation().normalize_translation()
