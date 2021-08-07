@@ -80,22 +80,25 @@ class TestHex:
         assert -inh == outh
 
     @pytest.mark.parametrize(
-        "inh,outh",
+        "inh,times,outh",
         [
-            (Hex(0, 0, 0), Hex(0, 0, 0)),
-            (Hex(1, 0, -1), Hex(1, -1, 0)),
-            (Hex(1, -1, 0), Hex(0, -1, 1)),
-            (Hex(1, 2, -3), Hex(3, -1, -2)),
-            (UP, UR),
-            (UR, DR),
-            (DR, DN),
-            (DN, DL),
-            (DL, UL),
-            (UL, UP),
+            (Hex(0, 0, 0), 1, Hex(0, 0, 0)),
+            (Hex(1, 0, -1), 1, Hex(1, -1, 0)),
+            (Hex(1, -1, 0), 1, Hex(0, -1, 1)),
+            (Hex(1, 2, -3), 1, Hex(3, -1, -2)),
+            (UP, 1, UR),
+            (UR, 1, DR),
+            (DR, 1, DN),
+            (DN, 1, DL),
+            (DL, 1, UL),
+            (UL, 1, UP),
+            (UP, 2, DR),
+            (DR, 3, UL),
+            (DN, 6, DN),
         ],
     )
-    def test_rotate(self, inh: Hex, outh: Hex) -> None:
-        assert inh.rotate() == outh
+    def test_rotate(self, inh: Hex, times: int, outh: Hex) -> None:
+        assert inh.rotate(times) == outh
 
     def test_conveniences(self) -> None:
         assert OR == Hex(0, 0, 0)

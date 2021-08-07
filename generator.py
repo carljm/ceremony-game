@@ -43,9 +43,26 @@ class Hex:
     def is_origin(self) -> bool:
         return self.x == self.y == self.z == 0
 
-    def rotate(self) -> Hex:
-        """Return next clockwise rotation of this hex around origin."""
-        return Hex(-self.z, -self.x, -self.y)
+    def rotate(self, steps: int = 1) -> Hex:
+        """Return clockwise rotation of this hex around origin.
+
+        If `steps` is one, rotate a single hex side; six steps is the identity.
+
+        """
+        while steps > 5:
+            steps -= 6
+        while steps < 0:
+            steps += 6
+        if steps == 0:
+            return self
+        x, y, z = self.x, self.y, self.z
+        if steps % 2:
+            x, y, z = -x, -y, -z
+        if steps == 1 or steps == 4:
+            x, y, z = z, x, y
+        elif steps == 2 or steps == 5:
+            x, y, z = y, z, x
+        return Hex(x, y, z)
 
 
 @dataclass(frozen=True)
@@ -58,9 +75,9 @@ class Shape:
         """Return a new Shape with all nodes translated by h."""
         return Shape([n + h for n in self.nodes])
 
-    def rotate(self) -> Shape:
-        """Return next clockwise rotation of this shape (not normalized.)"""
-        return Shape([h.rotate() for h in self.nodes])
+    def rotate(self, steps: int = 1) -> Shape:
+        """Return clockwise rotation of this shape (not normalized.)"""
+        return Shape([h.rotate(steps) for h in self.nodes])
 
     def normalize_translation(self) -> Shape:
         """Return the same Shape in translationally normal form.
@@ -89,18 +106,21 @@ class Shape:
         hexes in the shape (if tied, maximize y components next.)
 
         """
-        # TODO: there should be a more efficient algorithm here that just checks the
-        # vector sum on each axis and then knows exactly how to rotate.
-        cur = self
-        best_rotation = cur
-        best_sum = cur.sum()
+        # Rather than rotating the entire shape all the way around and re-summing each
+        # version of it, we rely on the fact that the sum of a rotated shape is the same
+        # as the rotated sum, so we can just find the best orientation for the single
+        # sum vector, and then rotate the entire shape the right amount.
+        cur_sum = self.sum()
+        best_sum = cur_sum
+        rotations = 0
         for i in range(5):
-            cur_sum = cur.sum()
+            cur_sum = cur_sum.rotate()
             if cur_sum > best_sum:
                 best_sum = cur_sum
-                best_rotation = cur
-            cur = cur.rotate()
-        return best_rotation
+                rotations = i + 1
+        if rotations:
+            return self.rotate(rotations)
+        return self
 
     def normalize(self) -> Shape:
         """Return same shape in translationally and rotationally normal form."""
