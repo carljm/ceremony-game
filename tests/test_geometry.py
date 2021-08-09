@@ -15,27 +15,27 @@ UL = DL.rotate()
 
 class TestHex:
     @pytest.mark.parametrize(
-        "x,y,z",
+        "q,r,s",
         [
             (0, 0, 0),
             (1, 0, -1),
         ],
     )
-    def test_valid(self, x: int, y: int, z: int) -> None:
-        h = Hex(x, y, z)
-        assert h.x == x
-        assert h.y == y
-        assert h.z == z
+    def test_valid(self, q: int, r: int, s: int) -> None:
+        h = Hex(q, r, s)
+        assert h.q == q
+        assert h.r == r
+        assert h.s == s
 
     @pytest.mark.parametrize(
-        "x,y,z",
+        "q,r,s",
         [
             (1, 0, 0),
         ],
     )
-    def test_invalid(self, x: int, y: int, z: int) -> None:
+    def test_invalid(self, q: int, r: int, s: int) -> None:
         with pytest.raises(InvalidHexError):
-            Hex(x, y, z)
+            Hex(q, r, s)
 
     @pytest.mark.parametrize(
         "ins,outs",

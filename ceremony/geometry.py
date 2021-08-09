@@ -14,34 +14,34 @@ class InvalidHexError(Exception):
 class Hex:
     """A hex position in cube coordinates.
 
-    X, Y, and Z must always total to zero.
+    q, r, and s must always total to zero.
 
     See https://www.redblobgames.com/grids/hexagons/ for details.
 
     """
 
-    x: int
-    y: int
-    z: int
+    q: int
+    r: int
+    s: int
 
     def __post_init__(self) -> None:
-        if self.x + self.y + self.z != 0:
-            raise InvalidHexError(f"{self.x} + {self.y} + {self.z} != 0")
+        if self.q + self.r + self.s != 0:
+            raise InvalidHexError(f"{self.q} + {self.r} + {self.s} != 0")
 
     def __add__(self, h: Hex) -> Hex:
-        return Hex(self.x + h.x, self.y + h.y, self.z + h.z)
+        return Hex(self.q + h.q, self.r + h.r, self.s + h.s)
 
     def __sub__(self, h: Hex) -> Hex:
         return self + (-h)
 
     def __neg__(self) -> Hex:
-        return Hex(-self.x, -self.y, -self.z)
+        return Hex(-self.q, -self.r, -self.s)
 
     def __lt__(self, h: Hex) -> bool:
-        return (self.x, self.y, self.z) < (h.x, h.y, h.z)
+        return (self.q, self.r, self.s) < (h.q, h.r, h.s)
 
     def is_origin(self) -> bool:
-        return self.x == self.y == self.z == 0
+        return self.q == self.r == self.s == 0
 
     def rotate(self, steps: int = 1) -> Hex:
         """Return clockwise rotation of this hex around origin.
@@ -55,14 +55,14 @@ class Hex:
             steps += 6
         if steps == 0:
             return self
-        x, y, z = self.x, self.y, self.z
+        q, r, s = self.q, self.r, self.s
         if steps % 2:
-            x, y, z = -x, -y, -z
+            q, r, s = -q, -r, -s
         if steps == 1 or steps == 4:
-            x, y, z = z, x, y
+            q, r, s = s, q, r
         elif steps == 2 or steps == 5:
-            x, y, z = y, z, x
-        return Hex(x, y, z)
+            q, r, s = r, s, q
+        return Hex(q, r, s)
 
 
 @dataclass(frozen=True)
@@ -82,7 +82,7 @@ class Shape:
     def normalize_translation(self) -> Shape:
         """Return the same Shape in translationally normal form.
 
-        In translationally normal form, hexes are ordered by (x, y, z) tuple and shape
+        In translationally normal form, hexes are ordered by (q, r, s) tuple and shape
         is translated such that first hex is (0, 0, 0).
 
         """
@@ -102,8 +102,8 @@ class Shape:
     def normalize_rotation(self) -> Shape:
         """Return the same Shape in rotationally normal form.
 
-        This is the rotated form which maximizes the sum of the x components of all
-        hexes in the shape (if tied, maximize y components next.)
+        This is the rotated form which maximizes the sum of the q components of all
+        hexes in the shape (if tied, maximize r components next.)
 
         """
         # Rather than rotating the entire shape all the way around and re-summing each
