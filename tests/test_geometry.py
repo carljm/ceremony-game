@@ -1,16 +1,7 @@
 import pytest
 from typing import Sequence
 
-from ceremony.geometry import Hex, InvalidHexError, Shape
-
-
-OR = Hex(0, 0, 0)
-UP = Hex(0, 1, -1)
-UR = UP.rotate()
-DR = UR.rotate()
-DN = DR.rotate()
-DL = DN.rotate()
-UL = DL.rotate()
+from ceremony.geometry import Hex, InvalidHexError, Shape, OR, UP, UR, DR, DN, DL, UL
 
 
 class TestHex:

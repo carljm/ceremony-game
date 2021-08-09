@@ -65,6 +65,15 @@ class Hex:
         return Hex(q, r, s)
 
 
+OR = Hex(0, 0, 0)
+UP = Hex(0, 1, -1)
+UR = UP.rotate()
+DR = UR.rotate()
+DN = DR.rotate()
+DL = DN.rotate()
+UL = DL.rotate()
+
+
 @dataclass(frozen=True)
 class Shape:
     """A set of hexes represented as an ordered sequence of Hex."""
