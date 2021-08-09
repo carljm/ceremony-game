@@ -28,11 +28,11 @@ def render_shapes(hex_shapes: Sequence[HexShape], filename: str) -> None:
     # translate everything again so that (3.0, 3.0) is lower left of overall box
     offset = Point(3.0 - minx, 3.0 - miny)
     translated_shapes = [s.translate(offset) for s in translated_shapes]
-    width = round((maxx + offset.x + 3.0) * 100)
-    height = round((maxy + offset.y + 3.0) * 100)
+    width = round((maxx + offset.x + 3.0) * 20)
+    height = round((maxy + offset.y + 3.0) * 20)
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     ctx = cairo.Context(surface)
-    ctx.scale(100, 100)
+    ctx.scale(20, 20)
     for shape in translated_shapes:
         draw_shape(shape, ctx)
     surface.write_to_png(filename)
