@@ -88,6 +88,8 @@ class Shape:
         return Shape([LAYOUT.hex_to_point(h) for h in hs.nodes])
 
     def bounding_box(self) -> Tuple[Point, Point]:
+        if not self.points:
+            return ORIGIN, ORIGIN
         xs = sorted(p.x for p in self.points)
         ys = sorted(p.y for p in self.points)
         return (Point(xs[0], ys[0]), Point(xs[-1], ys[-1]))
