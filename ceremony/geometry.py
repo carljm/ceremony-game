@@ -73,6 +73,8 @@ DN = DR.rotate()
 DL = DN.rotate()
 UL = DL.rotate()
 
+DIRS = [UP, UR, DR, DN, DL, UL]
+
 
 @dataclass(frozen=True)
 class Shape:
