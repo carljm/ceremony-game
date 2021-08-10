@@ -78,15 +78,15 @@ UL = DL.rotate()
 class Shape:
     """A set of hexes represented as an ordered sequence of Hex."""
 
-    nodes: Sequence[Hex]
+    hexes: Sequence[Hex]
 
     def translate(self, h: Hex) -> Shape:
-        """Return a new Shape with all nodes translated by h."""
-        return Shape([n + h for n in self.nodes])
+        """Return a new Shape with all hexes translated by h."""
+        return Shape([n + h for n in self.hexes])
 
     def rotate(self, steps: int = 1) -> Shape:
         """Return clockwise rotation of this shape (not normalized.)"""
-        return Shape([h.rotate(steps) for h in self.nodes])
+        return Shape([h.rotate(steps) for h in self.hexes])
 
     def normalize_translation(self) -> Shape:
         """Return the same Shape in translationally normal form.
@@ -95,18 +95,18 @@ class Shape:
         is translated such that first hex is (0, 0, 0).
 
         """
-        nodes = sorted(self.nodes)
-        if not nodes:
+        hexes = sorted(self.hexes)
+        if not hexes:
             return self
-        n = nodes[0]
-        s = Shape(nodes)
+        n = hexes[0]
+        s = Shape(hexes)
         if n.is_origin():
             return s
         return s.translate(-n)
 
     def sum(self) -> Hex:
         """Return the vector sum of all hexes in this shape."""
-        return reduce(lambda a, b: a + b, self.nodes, Hex(0, 0, 0))
+        return reduce(lambda a, b: a + b, self.hexes, Hex(0, 0, 0))
 
     def normalize_rotation(self) -> Shape:
         """Return the same Shape in rotationally normal form.
