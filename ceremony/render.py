@@ -14,18 +14,19 @@ def render_shapes(hex_shapes: Sequence[HexShape], filename: str) -> None:
     # stack shapes one below the other
     translated_shapes = []
     offset = ORIGIN
-    minx = maxx = miny = maxy = 0.0
+    minx = maxx = miny = maxy = None
     for shape in shapes:
+        box = shape.bounding_box()
+        if miny is not None:
+            offset = offset + Point(0.0, maxy - box[0].y + 4.0)
         shape = shape.translate(offset)
         translated_shapes.append(shape)
         box = shape.bounding_box()
-        minx = min(minx, box[0].x)
-        maxx = max(maxx, box[1].x)
-        miny = min(miny, box[0].y)
-        maxy = max(maxy, box[1].y)
-        height = box[1].y - box[0].y
-        offset = offset + Point(0.0, -height)
-    # translate everything again so that (3.0, 3.0) is lower left of overall box
+        minx = min(minx if minx is not None else box[0].x, box[0].x)
+        maxx = max(maxx if maxx is not None else box[1].x, box[1].x)
+        miny = min(miny if miny is not None else box[0].y, box[0].y)
+        maxy = max(maxy if maxy is not None else box[1].y, box[1].y)
+    # translate everything again so that (3.0, 3.0) is upper left of overall box
     offset = Point(3.0 - minx, 3.0 - miny)
     translated_shapes = [s.translate(offset) for s in translated_shapes]
     width = round((maxx + offset.x + 3.0) * 20)
@@ -33,6 +34,9 @@ def render_shapes(hex_shapes: Sequence[HexShape], filename: str) -> None:
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     ctx = cairo.Context(surface)
     ctx.scale(20, 20)
+    ctx.rectangle(0, 0, width, height)
+    ctx.set_source_rgb(0.0, 0.0, 0.0)
+    ctx.fill()
     for shape in translated_shapes:
         draw_shape(shape, ctx)
     surface.write_to_png(filename)

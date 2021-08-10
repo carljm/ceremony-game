@@ -10,6 +10,21 @@ s1 = Shape(
         UP + UR + DR + DN,
         UP + UR + DR + DN + DL,
         UP + UL,
+        UP + UL + DL,
+        UP + UL + DL + DL,
     ]
 ).normalize()
-render_shapes([s1], "example.png")
+s2 = Shape(
+    [
+        OR,
+        UP,
+        UR,
+        UR + UR,
+        UR + UR + UP,
+        UR + UR + UP + UL,
+        UR + UR + DN,
+        UR + UR + DN + DN,
+        DN,
+    ]
+)
+render_shapes([s1, s2], "example.png")
