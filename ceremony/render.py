@@ -27,6 +27,9 @@ def render_shapes(hex_shapes: Sequence[HexShape], filename: str) -> None:
         miny = min(miny if miny is not None else box[0].y, box[0].y)
         maxy = max(maxy if maxy is not None else box[1].y, box[1].y)
     # translate everything again so that (3.0, 3.0) is upper left of overall box
+    if miny is None or maxy is None or minx is None or maxx is None:
+        # No shapes to render!
+        return
     offset = Point(3.0 - minx, 3.0 - miny)
     translated_shapes = [s.translate(offset) for s in translated_shapes]
     width = round((maxx + offset.x + 3.0) * 20)
