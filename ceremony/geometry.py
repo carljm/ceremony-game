@@ -37,6 +37,9 @@ class Hex:
     def __neg__(self) -> Hex:
         return Hex(-self.q, -self.r, -self.s)
 
+    def __mul__(self, mult: int) -> Hex:
+        return Hex(self.q * mult, self.r * mult, self.s * mult)
+
     def __lt__(self, h: Hex) -> bool:
         return (self.q, self.r, self.s) < (h.q, h.r, h.s)
 

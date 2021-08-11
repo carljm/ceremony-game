@@ -71,6 +71,17 @@ class TestHex:
         assert -inh == outh
 
     @pytest.mark.parametrize(
+        "inh,mul,outh",
+        [
+            (Hex(0, 0, 0), 2, Hex(0, 0, 0)),
+            (Hex(1, 0, -1), 0, Hex(0, 0, 0)),
+            (Hex(1, 1, -2), 2, Hex(2, 2, -4)),
+        ],
+    )
+    def test_mul(self, inh: Hex, mul: int, outh: Hex) -> None:
+        assert inh * mul == outh
+
+    @pytest.mark.parametrize(
         "inh,times,outh",
         [
             (Hex(0, 0, 0), 1, Hex(0, 0, 0)),
