@@ -1,30 +1,16 @@
-from ceremony.geometry import Shape, OR, UP, UR, DR, DN, DL, UL
+from ceremony.collection import ShapeSet
+from ceremony.generate import extensions
+from ceremony.geometry import Shape, OR, UR
 from ceremony.render import render_shapes
 
-s1 = Shape(
-    [
-        OR,
-        UP,
-        UP + UR,
-        UP + UR + DR,
-        UP + UR + DR + DN,
-        UP + UR + DR + DN + DL,
-        UP + UL,
-        UP + UL + DL,
-        UP + UL + DL + DL,
-    ]
-).normalize()
-s2 = Shape(
-    [
-        OR,
-        UP,
-        UR,
-        UR + UR,
-        UR + UR + UP,
-        UR + UR + UP + UL,
-        UR + UR + DN,
-        UR + UR + DN + DN,
-        DN,
-    ]
-)
-render_shapes([s1, s2], "example.png")
+shapes = ShapeSet()
+shapes.add(Shape([OR, UR]))
+
+for i in range(2, 4):
+    for shape in shapes:
+        if len(shape.hexes) != i:
+            continue
+        for ext in extensions(shape):
+            shapes.add(ext)
+
+render_shapes([s for s in shapes if len(s.hexes) == 3], "example.png")
