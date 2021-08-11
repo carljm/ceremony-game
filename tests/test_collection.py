@@ -26,3 +26,9 @@ class TestShapeSet:
         for shape, dupe in shapes:
             added = ss.add(shape)
             assert added == (not dupe)
+
+    def test_iter(self) -> None:
+        ss = ShapeSet()
+        ss.add(Shape([OR, UP]))
+        ss.add(Shape([OR, UP, UP + UP]))
+        assert list(ss) == [Shape([OR, UR]), Shape([OR, UR, UR + UR])]

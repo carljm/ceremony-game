@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Dict, Iterator, List, Tuple
 
 from ceremony.geometry import Hex, Shape, OR
 
@@ -38,6 +38,9 @@ class ShapeSet:
             self.shapes.append(s)
             return True
         return False
+
+    def __iter__(self) -> Iterator[Shape]:
+        return iter(self.shapes)
 
 
 class Node:
