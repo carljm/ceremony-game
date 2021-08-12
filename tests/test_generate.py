@@ -10,19 +10,19 @@ class TestExtensions:
         "ins,exts",
         [
             (
-                Shape([OR]),
+                Shape((OR,)),
                 [
-                    Shape([OR, UR]),
+                    Shape((OR, UR)),
                 ],
             ),
             (
-                Shape([OR, UP]),
+                Shape((OR, UP)),
                 [
-                    Shape([OR, DR, UR]),
-                    Shape([OR, UP, DR]),
-                    Shape([OR, UP, UP + UP]),
-                    Shape([OR, UR, UR + DR]),
-                    Shape([OR, DR, DR + UR]),
+                    Shape((OR, DR, UR)),
+                    Shape((OR, UP, DR)),
+                    Shape((OR, UP, UP + UP)),
+                    Shape((OR, UR, UR + DR)),
+                    Shape((OR, DR, DR + UR)),
                 ],
             ),
         ],

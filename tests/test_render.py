@@ -10,11 +10,26 @@ class TestPoint:
     def test_add(self) -> None:
         assert Point(1.0, 2.0) + Point(3.1, 1.2) == Point(4.1, 3.2)
 
+    def test_mul(self) -> None:
+        assert Point(1.0, 2.0) * 2 == Point(2.0, 4.0)
+
+
+s3o2 = math.sqrt(3.0) / 2.0
+
 
 class TestShape:
-    def test_from_hex_shape(self) -> None:
-        s = Shape.from_hex_shape(HexShape([Hex(1, 0, -1)]))
-        assert s == Shape([Point(1.5, math.sqrt(3.0) / 2.0)])
+    @pytest.mark.parametrize(
+        "hexshape,shape",
+        [
+            (HexShape.of(Hex(0, 0, 0)), Shape([Point(0.0, 0.0)])),
+            (
+                HexShape.of(Hex(0, 1, -1), Hex(1, 0, -1)),
+                Shape([Point(0.0, -s3o2), Point(0.0, s3o2)]),
+            ),
+        ],
+    )
+    def test_from_hex_shape(self, hexshape: HexShape, shape: Shape) -> None:
+        assert Shape.from_hex_shape(hexshape) == shape
 
     @pytest.mark.parametrize(
         "shape,box",

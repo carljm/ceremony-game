@@ -18,7 +18,7 @@ def extensions(base: Shape) -> Iterator[Shape]:
             cand = h + d
             if cand in hexes:
                 continue
-            new = Shape(list(base.hexes) + [cand]).normalize()
+            new = Shape(tuple(base.hexes) + (cand,)).normalize()
             added = seen.add(new)
             if added:
                 yield new

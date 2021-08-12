@@ -10,14 +10,14 @@ class TestShapeSet:
     @pytest.mark.parametrize(
         "shapes",
         [
-            [(Shape([]), True)],
-            [(Shape([OR]), False)],
-            [(Shape([UP, UP + UR]), False), (Shape([UP, UP + UR]), True)],
-            [(Shape([DR, DR + DN]), False), (Shape([DL, DL + UL]), True)],
+            [(Shape(()), True)],
+            [(Shape((OR,)), False)],
+            [(Shape((UP, UP + UR)), False), (Shape((UP, UP + UR)), True)],
+            [(Shape((DR, DR + DN)), False), (Shape((DL, DL + UL)), True)],
             [
-                (Shape([DR, DR + DN, DR + DN + DN]), False),
-                (Shape([DR, DR + DN]), False),
-                (Shape([DR, DR + DN]), True),
+                (Shape((DR, DR + DN, DR + DN + DN)), False),
+                (Shape((DR, DR + DN)), False),
+                (Shape((DR, DR + DN)), True),
             ],
         ],
     )
@@ -29,6 +29,6 @@ class TestShapeSet:
 
     def test_iter(self) -> None:
         ss = ShapeSet()
-        ss.add(Shape([OR, UP]))
-        ss.add(Shape([OR, UP, UP + UP]))
-        assert list(ss) == [Shape([OR, UR]), Shape([OR, UR, UR + UR])]
+        ss.add(Shape((OR, UP)))
+        ss.add(Shape((OR, UP, UP + UP)))
+        assert list(ss) == [Shape((OR, UR)), Shape((OR, UR, UR + UR))]

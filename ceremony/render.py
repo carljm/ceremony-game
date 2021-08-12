@@ -72,6 +72,9 @@ class Point:
     def __add__(self, p: Point) -> Point:
         return Point(self.x + p.x, self.y + p.y)
 
+    def __mul__(self, factor: float) -> Point:
+        return Point(self.x * factor, self.y * factor)
+
 
 ORIGIN = Point(0.0, 0.0)
 UNIT = Point(1.0, 1.0)
@@ -85,7 +88,7 @@ class Shape:
 
     @classmethod
     def from_hex_shape(cls, hs: HexShape) -> Shape:
-        return Shape([LAYOUT.hex_to_point(h) for h in hs.hexes])
+        return Shape([LAYOUT.hex_to_point(h) for h in hs.hexes]).scale(1 / hs._scale)
 
     def bounding_box(self) -> Tuple[Point, Point]:
         if not self.points:
@@ -96,6 +99,9 @@ class Shape:
 
     def translate(self, vec: Point) -> Shape:
         return Shape([p + vec for p in self.points])
+
+    def scale(self, factor: float) -> Shape:
+        return Shape([p * factor for p in self.points])
 
 
 @dataclass(frozen=True)

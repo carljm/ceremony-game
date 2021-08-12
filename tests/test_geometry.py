@@ -75,11 +75,23 @@ class TestHex:
         [
             (Hex(0, 0, 0), 2, Hex(0, 0, 0)),
             (Hex(1, 0, -1), 0, Hex(0, 0, 0)),
+            (Hex(1, 0, -1), 1, Hex(1, 0, -1)),
             (Hex(1, 1, -2), 2, Hex(2, 2, -4)),
         ],
     )
     def test_mul(self, inh: Hex, mul: int, outh: Hex) -> None:
         assert inh * mul == outh
+
+    @pytest.mark.parametrize(
+        "inh,div,outh",
+        [
+            (Hex(0, 0, 0), 2, Hex(0, 0, 0)),
+            (Hex(1, 0, -1), 1, Hex(1, 0, -1)),
+            (Hex(2, 2, -4), 2, Hex(1, 1, -2)),
+        ],
+    )
+    def test_floordiv(self, inh: Hex, div: int, outh: Hex) -> None:
+        assert inh // div == outh
 
     @pytest.mark.parametrize(
         "inh,times,outh",
@@ -116,8 +128,8 @@ class TestShape:
     @pytest.mark.parametrize(
         "ins,diff,outs",
         [
-            (Shape([]), Hex(0, 0, 0), Shape([])),
-            (Shape([Hex(1, 0, -1)]), Hex(0, 1, -1), Shape([Hex(1, 1, -2)])),
+            (Shape(()), Hex(0, 0, 0), Shape(())),
+            (Shape((Hex(1, 0, -1),)), Hex(0, 1, -1), Shape((Hex(1, 1, -2),))),
         ],
     )
     def test_translate(self, ins: Shape, diff: Hex, outs: Shape) -> None:
@@ -126,11 +138,11 @@ class TestShape:
     @pytest.mark.parametrize(
         "ins,outs",
         [
-            (Shape([]), Shape([])),
-            (Shape([Hex(1, 1, -2)]), Shape([Hex(0, 0, 0)])),
+            (Shape(()), Shape(())),
+            (Shape((Hex(1, 1, -2),)), Shape((Hex(0, 0, 0),))),
             (
-                Shape([Hex(1, 2, -3), Hex(-3, 2, 1)]),
-                Shape([Hex(0, 0, 0), Hex(4, 0, -4)]),
+                Shape((Hex(1, 2, -3), Hex(-3, 2, 1))),
+                Shape((Hex(4, 0, -4), Hex(-4, 0, 4)), 2),
             ),
         ],
     )
@@ -140,31 +152,34 @@ class TestShape:
     @pytest.mark.parametrize(
         "ins,outs",
         [
-            (Shape([]), Shape([])),
+            (Shape(()), Shape(())),
             (
-                Shape([Hex(0, 0, 0), Hex(0, -1, 1)]),
-                Shape([Hex(0, 0, 0), Hex(1, 0, -1)]),
-            ),
-        ],
-    )
-    def test_normalize_rotation(self, ins: Shape, outs: Shape) -> None:
-        assert ins.normalize_rotation() == outs
-
-    @pytest.mark.parametrize(
-        "ins,outs",
-        [
-            (Shape([]), Shape([])),
-            (
-                Shape([Hex(0, -1, 1), Hex(0, -2, 2), Hex(-1, -2, 3)]),
-                Shape([Hex(0, 0, 0), Hex(1, 0, -1), Hex(2, -1, -1)]),
+                Shape((Hex(0, -1, 1), Hex(0, -2, 2), Hex(-1, -2, 3))),
+                Shape((Hex(-3, 1, 2), Hex(0, 1, -1), Hex(3, -2, -1)), 3),
             ),
             (
-                Shape([OR, DR, DR + UR, DR + UR + UR]),
-                Shape([OR, DR, DR + UR, DR + UR + UR]),
+                Shape((OR, DR, DR + UR, DR + UR + UR)),
+                Shape(
+                    (
+                        Hex(q=-6, r=3, s=3),
+                        Hex(q=-2, r=-1, s=3),
+                        Hex(q=2, r=-1, s=-1),
+                        Hex(q=6, r=-1, s=-5),
+                    ),
+                    4,
+                ),
             ),
             (
-                Shape([OR, UP, UP + UR, UP + UR + UR]),
-                Shape([OR, UR, UR + DR, UR + DR + DR]),
+                Shape((OR, UP, UP + UR, UP + UR + UR)),
+                Shape(
+                    (
+                        Hex(q=-3, r=-3, s=6),
+                        Hex(q=-3, r=1, s=2),
+                        Hex(q=1, r=1, s=-2),
+                        Hex(q=5, r=1, s=-6),
+                    ),
+                    4,
+                ),
             ),
         ],
     )

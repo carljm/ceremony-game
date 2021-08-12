@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import reduce, total_ordering
-from typing import Sequence
+from typing import Tuple
 
 
 class InvalidHexError(Exception):
@@ -40,6 +40,9 @@ class Hex:
     def __mul__(self, mult: int) -> Hex:
         return Hex(self.q * mult, self.r * mult, self.s * mult)
 
+    def __floordiv__(self, div: int) -> Hex:
+        return Hex(self.q // div, self.r // div, self.s // div)
+
     def __lt__(self, h: Hex) -> bool:
         return (self.q, self.r, self.s) < (h.q, h.r, h.s)
 
@@ -67,6 +70,40 @@ class Hex:
             q, r, s = r, s, q
         return Hex(q, r, s)
 
+    def ring(self) -> int:
+        """Return distance in hexes from origin, or "ring" of this hex."""
+        return max(abs(self.q), abs(self.r), abs(self.s))
+
+    def ring_index(self) -> int:
+        """
+        Return index of this hex around its ring (clockwise, straight up is 0).
+
+        """
+        if self.is_origin():
+            return 0
+        ring = self.ring()
+        a_q, a_r, a_s = abs(self.q), abs(self.r), abs(self.s)
+        if a_s > a_q and a_s >= a_r:
+            sector = 0
+            startd = UP
+            key = self.s
+        elif a_q > a_r and a_q >= a_s:
+            sector = 1
+            startd = UR
+            key = -self.q
+        elif a_r > a_s and a_r >= a_q:
+            sector = 2
+            startd = DR
+            key = self.r
+        else:
+            raise ValueError(f"{self} is not in any sector.")
+        if key > 0:
+            sector += 3
+            startd = startd.rotate(3)
+        start = startd * ring
+        dist_from_start = (self - start).ring()
+        return (sector * ring) + dist_from_start
+
 
 OR = Hex(0, 0, 0)
 UP = Hex(0, 1, -1)
@@ -81,61 +118,110 @@ DIRS = [UP, UR, DR, DN, DL, UL]
 
 @dataclass(frozen=True)
 class Shape:
-    """A set of hexes represented as an ordered sequence of Hex."""
+    """
+    A hex-grid shape represented as an ordered sequence of Hex.
 
-    hexes: Sequence[Hex]
+    In practice a tuple of Hex is used for hashability.
+
+    A scaling factor is also included, so that we can always have an integer-coordinates
+    center of mass / vector mean. In normalized form the scale should always equal the
+    number of hexes in the shape, but we explicitly track the scale to allow
+    construction of denormalized shapes.
+
+    Hexes always use integer coordinates, so if a shape is constructed with a scale that
+    is not a factor of all coordinates of all hexes in the shape, normalization could
+    result in floor division and an InvalidHexError. In general manual Shape
+    construction should always use scale=1 and only normalization should re-scale.
+
+    """
+
+    hexes: Tuple[Hex, ...]
+    _scale: int = 1
+
+    @classmethod
+    def of(cls, *hs: Hex) -> Shape:
+        """Shortcut to create a normalized shape of given hexes."""
+        return cls(hs).normalize()
 
     def translate(self, h: Hex) -> Shape:
         """Return a new Shape with all hexes translated by h."""
-        return Shape([n + h for n in self.hexes])
+        return Shape(tuple(n + h for n in self.hexes), self._scale)
 
     def rotate(self, steps: int = 1) -> Shape:
         """Return clockwise rotation of this shape (not normalized.)"""
-        return Shape([h.rotate(steps) for h in self.hexes])
+        return Shape(tuple(h.rotate(steps) for h in self.hexes), self._scale)
 
-    def normalize_translation(self) -> Shape:
-        """Return the same Shape in translationally normal form.
+    def scale_up(self, factor: int) -> Shape:
+        """Return this shape scaled up by given integer factor."""
+        return Shape(tuple(n * factor for n in self.hexes), self._scale * factor)
 
-        In translationally normal form, hexes are ordered by (q, r, s) tuple and shape
-        is translated such that first hex is (0, 0, 0).
-
-        """
-        hexes = sorted(self.hexes)
-        if not hexes:
-            return self
-        n = hexes[0]
-        s = Shape(hexes)
-        if n.is_origin():
-            return s
-        return s.translate(-n)
+    def scale_down(self, factor: int) -> Shape:
+        """Return this shape scaled down by given integer factor."""
+        assert self._scale % factor == 0
+        return Shape(tuple(n // factor for n in self.hexes), self._scale // factor)
 
     def sum(self) -> Hex:
         """Return the vector sum of all hexes in this shape."""
         return reduce(lambda a, b: a + b, self.hexes, Hex(0, 0, 0))
 
-    def normalize_rotation(self) -> Shape:
-        """Return the same Shape in rotationally normal form.
+    def mean(self) -> Hex:
+        """
+        Return the vector mean of all hexes in this shape.
 
-        This is the rotated form which maximizes the sum of the q components of all
-        hexes in the shape (if tied, maximize r components next.)
+        Requires that shape is scaled to a multiple of N, where N is number of hexes in
+        shape.
 
         """
-        # Rather than rotating the entire shape all the way around and re-summing each
-        # version of it, we rely on the fact that the sum of a rotated shape is the same
-        # as the rotated sum, so we can just find the best orientation for the single
-        # sum vector, and then rotate the entire shape the right amount.
-        cur_sum = self.sum()
-        best_sum = cur_sum
-        rotations = 0
-        for i in range(5):
-            cur_sum = cur_sum.rotate()
-            if cur_sum > best_sum:
-                best_sum = cur_sum
-                rotations = i + 1
-        if rotations:
-            return self.rotate(rotations)
-        return self
+        n = len(self.hexes)
+        assert self._scale % n == 0
+        return self.sum() // n
+
+    def normalize_translation(self) -> Shape:
+        """Return the same Shape in translationally normal form.
+
+        This means that the origin is also the center of mass (or vector mean) of the
+        shape. We scale the shape to N (where N is number of nodes) to ensure the vector
+        mean is an integer-coordinates hex.
+
+        Requires that shape must initially have scale == 1.
+
+        """
+        if not self.hexes:
+            return self
+        assert self._scale == 1
+        s = self.scale_up(len(self.hexes))
+        return s.translate(-s.mean())
 
     def normalize(self) -> Shape:
-        """Return same shape in translationally and rotationally normal form."""
-        return self.normalize_rotation().normalize_translation()
+        """
+        Return same shape in translationally and rotationally normal form.
+
+        Normal form will also have hexes listed in ascending (q, r, s) tuple order.
+
+        """
+        if not self.hexes:
+            return self
+        s = self.normalize_translation()
+        rotations = [s.rotate(i).sorted() for i in range(5)]
+        ring = 1
+        outer_ring = max(h.ring() for h in s.hexes)
+        while ring <= outer_ring:
+            sums = [(r, r.ring_sum(ring)) for r in rotations]
+            min_sum = min(s[1] for s in sums)
+            rotations = [s[0] for s in sums if s[1] == min_sum]
+            if len(rotations) == 1:
+                break
+            ring += 1
+        else:
+            # If we still have >1 rotations, we have rotational symmetry
+            for r in rotations[1:]:
+                assert r == rotations[0]
+        return rotations[0]
+
+    def sorted(self) -> Shape:
+        """Return same shape but with hexes sorted in ascending (q, r, s) order."""
+        return Shape(tuple(sorted(self.hexes)), self._scale)
+
+    def ring_sum(self, ring: int) -> int:
+        """Return binary sum of a ring."""
+        return sum(2 ** h.ring_index() for h in self.hexes if h.ring() == ring)
