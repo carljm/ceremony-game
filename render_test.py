@@ -1,12 +1,11 @@
-from ceremony.collection import ShapeSet
 from ceremony.generate import extensions
 from ceremony.geometry import Shape, OR, UR
 from ceremony.render import render_shapes
 
 
 def main():
-    shapes = ShapeSet()
-    shapes.add(Shape((OR, UR)))
+    shapes = set()
+    shapes.add(Shape.of((OR, UR)))
 
     for i in range(2, 4):
         for shape in shapes:

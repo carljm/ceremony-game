@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import reduce, total_ordering
-from typing import Tuple
+from typing import FrozenSet
 
 
 class InvalidHexError(Exception):
@@ -135,30 +135,37 @@ class Shape:
 
     """
 
-    hexes: Tuple[Hex, ...]
+    hexes: FrozenSet[Hex]
     _scale: int = 1
 
     @classmethod
     def of(cls, *hs: Hex) -> Shape:
         """Shortcut to create a normalized shape of given hexes."""
-        return cls(hs).normalize()
+        return cls(frozenset(hs)).normalize()
 
     def translate(self, h: Hex) -> Shape:
         """Return a new Shape with all hexes translated by h."""
-        return Shape(tuple(n + h for n in self.hexes), self._scale)
+        return Shape(frozenset(n + h for n in self.hexes), self._scale)
 
     def rotate(self, steps: int = 1) -> Shape:
         """Return clockwise rotation of this shape (not normalized.)"""
-        return Shape(tuple(h.rotate(steps) for h in self.hexes), self._scale)
+        return Shape(frozenset(h.rotate(steps) for h in self.hexes), self._scale)
 
     def scale_up(self, factor: int) -> Shape:
         """Return this shape scaled up by given integer factor."""
-        return Shape(tuple(n * factor for n in self.hexes), self._scale * factor)
+        return Shape(frozenset(n * factor for n in self.hexes), self._scale * factor)
 
     def scale_down(self, factor: int) -> Shape:
         """Return this shape scaled down by given integer factor."""
         assert self._scale % factor == 0
-        return Shape(tuple(n // factor for n in self.hexes), self._scale // factor)
+        return Shape(frozenset(n // factor for n in self.hexes), self._scale // factor)
+
+    def scale_to_one(self) -> Shape:
+        """Translate shape onto unit grid and scale down to scale == 1."""
+        if not self.hexes:
+            return self
+        sample_hex = sorted(self.hexes)[0]
+        return self.translate(-sample_hex).scale_down(self._scale)
 
     def sum(self) -> Hex:
         """Return the vector sum of all hexes in this shape."""
@@ -196,13 +203,11 @@ class Shape:
         """
         Return same shape in translationally and rotationally normal form.
 
-        Normal form will also have hexes listed in ascending (q, r, s) tuple order.
-
         """
         if not self.hexes:
             return self
         s = self.normalize_translation()
-        rotations = [s.rotate(i).sorted() for i in range(5)]
+        rotations = [s.rotate(i + 1) for i in range(5)]
         ring = 1
         outer_ring = max(h.ring() for h in s.hexes)
         while ring <= outer_ring:
@@ -217,10 +222,6 @@ class Shape:
             for r in rotations[1:]:
                 assert r == rotations[0]
         return rotations[0]
-
-    def sorted(self) -> Shape:
-        """Return same shape but with hexes sorted in ascending (q, r, s) order."""
-        return Shape(tuple(sorted(self.hexes)), self._scale)
 
     def ring_sum(self, ring: int) -> int:
         """Return binary sum of a ring."""

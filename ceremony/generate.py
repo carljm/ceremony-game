@@ -1,6 +1,5 @@
 from typing import Iterator
 
-from ceremony.collection import ShapeSet
 from ceremony.geometry import Shape, DIRS
 
 
@@ -8,17 +7,20 @@ def extensions(base: Shape) -> Iterator[Shape]:
     """
     Yield all valid shapes derived from adding one hex to base shape.
 
-    Shapes must be contiguous. (TODO more validity restrictions.)
+    Shapes must be contiguous. Base shape will be translated onto grid and scaled down
+    to scale == 1.
+
+    (TODO more validity restrictions.)
 
     """
-    hexes = set(base.hexes)
-    seen = ShapeSet()
-    for h in hexes:
+    seen = set()
+    base = base.scale_to_one()
+    for h in base.hexes:
         for d in DIRS:
             cand = h + d
-            if cand in hexes:
+            if cand in base.hexes:
                 continue
-            new = Shape(tuple(base.hexes) + (cand,)).normalize()
-            added = seen.add(new)
-            if added:
+            new = Shape.of(*base.hexes, cand)
+            if new not in seen:
+                seen.add(new)
                 yield new

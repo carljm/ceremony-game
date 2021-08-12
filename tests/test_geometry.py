@@ -1,7 +1,8 @@
 import pytest
-from typing import Sequence
+from typing import Sequence, Tuple
 
 from ceremony.geometry import Hex, InvalidHexError, Shape, OR, UP, UR, DR, DN, DL, UL
+from .factory import shape
 
 
 class TestHex:
@@ -123,13 +124,44 @@ class TestHex:
         assert DL == Hex(-1, 0, 1)
         assert UL == Hex(-1, 1, 0)
 
+    @pytest.mark.parametrize("h,ring", [(OR, 0), (UP, 1), (DN + DL, 2)])
+    def test_ring(self, h: Hex, ring: int) -> None:
+        assert h.ring() == ring
+
+    @pytest.mark.parametrize(
+        "h,ring_index",
+        [
+            (OR, 0),
+            (UP, 0),
+            (UR, 1),
+            (DR, 2),
+            (DN, 3),
+            (DL, 4),
+            (UL, 5),
+            (UP + UP, 0),
+            (UP + UR, 1),
+            (UR + UR, 2),
+            (UR + DR, 3),
+            (DR + DR, 4),
+            (DN + DR, 5),
+            (DN + DN, 6),
+            (DN + DL, 7),
+            (DL + DL, 8),
+            (DL + UL, 9),
+            (UL + UL, 10),
+            (UL + UP, 11),
+        ],
+    )
+    def test_ring_index(self, h: Hex, ring_index: int) -> None:
+        assert h.ring_index() == ring_index
+
 
 class TestShape:
     @pytest.mark.parametrize(
         "ins,diff,outs",
         [
-            (Shape(()), Hex(0, 0, 0), Shape(())),
-            (Shape((Hex(1, 0, -1),)), Hex(0, 1, -1), Shape((Hex(1, 1, -2),))),
+            (shape(), Hex(0, 0, 0), shape()),
+            (shape(Hex(1, 0, -1)), Hex(0, 1, -1), shape(Hex(1, 1, -2))),
         ],
     )
     def test_translate(self, ins: Shape, diff: Hex, outs: Shape) -> None:
@@ -138,11 +170,11 @@ class TestShape:
     @pytest.mark.parametrize(
         "ins,outs",
         [
-            (Shape(()), Shape(())),
-            (Shape((Hex(1, 1, -2),)), Shape((Hex(0, 0, 0),))),
+            (shape(), shape()),
+            (shape(Hex(1, 1, -2)), shape(Hex(0, 0, 0))),
             (
-                Shape((Hex(1, 2, -3), Hex(-3, 2, 1))),
-                Shape((Hex(4, 0, -4), Hex(-4, 0, 4)), 2),
+                shape(Hex(1, 2, -3), Hex(-3, 2, 1)),
+                shape(Hex(4, 0, -4), Hex(-4, 0, 4), _scale=2),
             ),
         ],
     )
@@ -152,36 +184,46 @@ class TestShape:
     @pytest.mark.parametrize(
         "ins,outs",
         [
-            (Shape(()), Shape(())),
+            (shape(), shape()),
             (
-                Shape((Hex(0, -1, 1), Hex(0, -2, 2), Hex(-1, -2, 3))),
-                Shape((Hex(-3, 1, 2), Hex(0, 1, -1), Hex(3, -2, -1)), 3),
+                shape(Hex(0, -1, 1), Hex(0, -2, 2), Hex(-1, -2, 3)),
+                shape(Hex(-3, 1, 2), Hex(0, 1, -1), Hex(3, -2, -1), _scale=3),
             ),
             (
-                Shape((OR, DR, DR + UR, DR + UR + UR)),
-                Shape(
-                    (
-                        Hex(q=-6, r=3, s=3),
-                        Hex(q=-2, r=-1, s=3),
-                        Hex(q=2, r=-1, s=-1),
-                        Hex(q=6, r=-1, s=-5),
-                    ),
-                    4,
+                shape(OR, DR, DR + UR, DR + UR + UR),
+                shape(
+                    Hex(q=1, r=1, s=-2),
+                    Hex(q=1, r=-3, s=2),
+                    Hex(q=1, r=5, s=-6),
+                    Hex(q=-3, r=-3, s=6),
+                    _scale=4,
                 ),
             ),
             (
-                Shape((OR, UP, UP + UR, UP + UR + UR)),
-                Shape(
-                    (
-                        Hex(q=-3, r=-3, s=6),
-                        Hex(q=-3, r=1, s=2),
-                        Hex(q=1, r=1, s=-2),
-                        Hex(q=5, r=1, s=-6),
-                    ),
-                    4,
+                shape(OR, UP, UP + UR, UP + UR + UR),
+                shape(
+                    Hex(q=-2, r=3, s=-1),
+                    Hex(q=-6, r=3, s=3),
+                    Hex(q=6, r=-5, s=-1),
+                    Hex(q=2, r=-1, s=-1),
+                    _scale=4,
                 ),
             ),
         ],
     )
     def test_normalize(self, ins: Shape, outs: Shape) -> None:
         assert ins.normalize() == outs
+
+    @pytest.mark.parametrize(
+        "s,sums",
+        [
+            (shape(), (0, 0, 0)),
+            (shape(OR), (1, 0, 0)),
+            (shape(OR, UP), (1, 1, 0)),
+            (shape(OR, DN), (1, 8, 0)),
+            (shape(DN, UP), (0, 9, 0)),
+            (shape(DN + DN, DR, DL, UP + UR), (0, 20, 66)),
+        ],
+    )
+    def test_ring_sum(self, s: Shape, sums: Tuple[int, ...]) -> None:
+        assert (s.ring_sum(0), s.ring_sum(1), s.ring_sum(2)) == sums

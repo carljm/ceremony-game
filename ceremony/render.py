@@ -82,13 +82,15 @@ UNIT = Point(1.0, 1.0)
 
 @dataclass(frozen=True)
 class Shape:
-    """A shape made up of a series of Points."""
+    """A shape made up of a series of cartesian Points."""
 
     points: Sequence[Point]
 
     @classmethod
     def from_hex_shape(cls, hs: HexShape) -> Shape:
-        return Shape([LAYOUT.hex_to_point(h) for h in hs.hexes]).scale(1 / hs._scale)
+        return Shape([LAYOUT.hex_to_point(h) for h in sorted(hs.hexes)]).scale(
+            1 / hs._scale
+        )
 
     def bounding_box(self) -> Tuple[Point, Point]:
         if not self.points:

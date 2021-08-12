@@ -1,7 +1,7 @@
 import pytest
 from typing import Sequence
 
-from ceremony.geometry import Shape, OR, UP, UR, DR
+from ceremony.geometry import Shape, OR, UP, UR, DR, DN
 from ceremony.generate import extensions
 
 
@@ -10,19 +10,17 @@ class TestExtensions:
         "ins,exts",
         [
             (
-                Shape((OR,)),
+                Shape.of(OR),
                 [
-                    Shape((OR, UR)),
+                    Shape.of(OR, UR),
                 ],
             ),
             (
-                Shape((OR, UP)),
+                Shape.of(OR, UP),
                 [
-                    Shape((OR, DR, UR)),
-                    Shape((OR, UP, DR)),
-                    Shape((OR, UP, UP + UP)),
-                    Shape((OR, UR, UR + DR)),
-                    Shape((OR, DR, DR + UR)),
+                    Shape.of(OR, UP, UR),
+                    Shape.of(OR, UP, DR),
+                    Shape.of(OR, UP, DN),
                 ],
             ),
         ],
