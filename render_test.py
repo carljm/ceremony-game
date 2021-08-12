@@ -3,18 +3,20 @@ from ceremony.geometry import Shape, OR, UR
 from ceremony.render import render_shapes
 
 
-def main():
+def main() -> None:
     shapes = set()
-    shapes.add(Shape.of((OR, UR)))
+    shapes.add(Shape.of(OR, UR))
+    last = shapes
 
-    for i in range(2, 4):
-        for shape in shapes:
-            if len(shape.hexes) != i:
-                continue
+    for i in range(3):
+        new = set()
+        for shape in last:
             for ext in extensions(shape):
-                shapes.add(ext)
+                new.add(ext)
+        shapes.update(new)
+        last = new
 
-    render_shapes([s for s in shapes if len(s.hexes) == 3], "example.png")
+    render_shapes(last, "example.png")
 
 
 if __name__ == "__main__":

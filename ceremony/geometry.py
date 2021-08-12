@@ -207,7 +207,7 @@ class Shape:
         if not self.hexes:
             return self
         s = self.normalize_translation()
-        rotations = [s.rotate(i + 1) for i in range(5)]
+        rotations = [s.rotate(i) for i in range(6)]
         ring = 1
         outer_ring = max(h.ring() for h in s.hexes)
         while ring <= outer_ring:

@@ -3,13 +3,13 @@ from __future__ import annotations
 import cairo
 import math
 from dataclasses import dataclass
-from typing import Sequence, Tuple
+from typing import Iterable, Sequence, Tuple
 
 
 from .geometry import Hex, Shape as HexShape
 
 
-def render_shapes(hex_shapes: Sequence[HexShape], filename: str) -> None:
+def render_shapes(hex_shapes: Iterable[HexShape], filename: str) -> None:
     shapes = [Shape.from_hex_shape(hs) for hs in hex_shapes]
     # stack shapes one below the other
     translated_shapes = []
@@ -18,7 +18,7 @@ def render_shapes(hex_shapes: Sequence[HexShape], filename: str) -> None:
     for shape in shapes:
         box = shape.bounding_box()
         if miny is not None:
-            offset = offset + Point(0.0, maxy - box[0].y + 4.0)
+            offset = Point(0.0, maxy - box[0].y + 4.0)
         shape = shape.translate(offset)
         translated_shapes.append(shape)
         box = shape.bounding_box()
@@ -32,11 +32,11 @@ def render_shapes(hex_shapes: Sequence[HexShape], filename: str) -> None:
         return
     offset = Point(3.0 - minx, 3.0 - miny)
     translated_shapes = [s.translate(offset) for s in translated_shapes]
-    width = round((maxx + offset.x + 3.0) * 20)
-    height = round((maxy + offset.y + 3.0) * 20)
+    width = round((maxx + offset.x + 3.0) * 10)
+    height = round((maxy + offset.y + 3.0) * 10)
     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
     ctx = cairo.Context(surface)
-    ctx.scale(20, 20)
+    ctx.scale(10, 10)
     ctx.rectangle(0, 0, width, height)
     ctx.set_source_rgb(0.0, 0.0, 0.0)
     ctx.fill()
