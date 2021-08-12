@@ -49,3 +49,8 @@ class TestShape:
         s1 = Shape([Point(0.0, 1.0), Point(1.0, 3.0)])
         s2 = s1.translate(Point(1.0, -1.0))
         assert s2 == Shape([Point(1.0, 0.0), Point(2.0, 2.0)])
+
+    def test_scale(self) -> None:
+        s1 = Shape([Point(0.0, 1.0), Point(1.0, 3.0)])
+        s2 = s1.scale(0.5)
+        assert s2 == Shape([Point(0.0, 0.5), Point(0.5, 1.5)])
