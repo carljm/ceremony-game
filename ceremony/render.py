@@ -13,6 +13,12 @@ from .geometry import Hex, Shape as HexShape
 # Larger number will result in larger rendered shapes.
 SCALE = 10
 
+# Padding around rendered shapes, in user coordinates
+PAD = 3.0
+
+# Number of shapes rendered in each row of grid
+GRID_WIDTH = 20
+
 
 def render_shapes(hex_shapes: Iterable[HexShape], filename: str) -> None:
     """Render given hex shapes to given PNG filename."""
@@ -38,29 +44,30 @@ def layout_shapes(hex_shapes: Iterable[HexShape]) -> Tuple[Sequence[Shape], int,
 
     """
     shapes = [Shape.from_hex_shape(hs) for hs in hex_shapes]
-    # stack shapes one below the other
+    boxes = [s.bounding_box() for s in shapes]
+    max_width = max(b[1].x - b[0].x for b in boxes)
+    max_height = max(b[1].y - b[0].y for b in boxes)
+    padded_w = max_width + PAD
+    padded_h = max_height + PAD
+    # lay out shapes in a grid
     translated_shapes = []
-    offset = ORIGIN
-    minx = maxx = miny = maxy = None
-    for shape in shapes:
-        box = shape.bounding_box()
-        if miny is not None:
-            offset = Point(0.0, maxy - box[0].y + 4.0)
-        shape = shape.translate(offset)
-        translated_shapes.append(shape)
-        box = shape.bounding_box()
-        minx = min(minx if minx is not None else box[0].x, box[0].x)
-        maxx = max(maxx if maxx is not None else box[1].x, box[1].x)
-        miny = min(miny if miny is not None else box[0].y, box[0].y)
-        maxy = max(maxy if maxy is not None else box[1].y, box[1].y)
-    # translate everything again so that (3.0, 3.0) is upper left of overall box
-    if miny is None or maxy is None or minx is None or maxx is None:
-        # No shapes to render!
-        return [], 0, 0
-    offset = Point(3.0 - minx, 3.0 - miny)
-    translated_shapes = [s.translate(offset) for s in translated_shapes]
-    width = round((maxx + offset.x + 3.0) * SCALE)
-    height = round((maxy + offset.y + 3.0) * SCALE)
+    grid_x = 0
+    max_grid_x = 0
+    grid_y = 0
+    for s, b in zip(shapes, boxes):
+        width = b[1].x - b[0].x
+        x_offset = (PAD + (padded_w * grid_x)) - b[0].x + ((max_width - width) / 2.0)
+        y_offset = (PAD + (padded_h * grid_y)) - b[0].y
+        translated_shapes.append(s.translate(Point(x_offset, y_offset)))
+        grid_x += 1
+        if grid_x > max_grid_x:
+            max_grid_x = grid_x
+        if grid_x >= GRID_WIDTH:
+            grid_x = 0
+            grid_y += 1
+    max_grid_y = grid_y + (1 if grid_x else 0)
+    width = round((PAD + (max_grid_x * padded_w)) * SCALE)
+    height = round((PAD + (max_grid_y * padded_h)) * SCALE)
     return translated_shapes, width, height
 
 
