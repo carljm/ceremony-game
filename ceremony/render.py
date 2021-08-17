@@ -9,7 +9,34 @@ from typing import Iterable, Sequence, Tuple
 from .geometry import Hex, Shape as HexShape
 
 
+# Scaling factor between user coordinates (Shape Point x,y) and pixel coordinates.
+# Larger number will result in larger rendered shapes.
+SCALE = 10
+
+
 def render_shapes(hex_shapes: Iterable[HexShape], filename: str) -> None:
+    """Render given hex shapes to given PNG filename."""
+    shapes, width, height = layout_shapes(hex_shapes)
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+    ctx = cairo.Context(surface)
+    ctx.scale(SCALE, SCALE)
+    ctx.rectangle(0, 0, width, height)
+    ctx.set_source_rgb(0.0, 0.0, 0.0)
+    ctx.fill()
+    for shape in shapes:
+        draw_shape(shape, ctx)
+    surface.write_to_png(filename)
+
+
+def layout_shapes(hex_shapes: Iterable[HexShape]) -> Tuple[Sequence[Shape], int, int]:
+    """Layout hex shapes as non-overlapping cartesian shapes for rendering.
+
+    Will be laid out entirely in +x, +y quadrant, with some empty padding.
+
+    Return (shapes, width, height), where width and height are the width and height of
+    overall needed canvas, scaled to pixel coordinates.
+
+    """
     shapes = [Shape.from_hex_shape(hs) for hs in hex_shapes]
     # stack shapes one below the other
     translated_shapes = []
@@ -29,20 +56,12 @@ def render_shapes(hex_shapes: Iterable[HexShape], filename: str) -> None:
     # translate everything again so that (3.0, 3.0) is upper left of overall box
     if miny is None or maxy is None or minx is None or maxx is None:
         # No shapes to render!
-        return
+        return [], 0, 0
     offset = Point(3.0 - minx, 3.0 - miny)
     translated_shapes = [s.translate(offset) for s in translated_shapes]
-    width = round((maxx + offset.x + 3.0) * 10)
-    height = round((maxy + offset.y + 3.0) * 10)
-    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-    ctx = cairo.Context(surface)
-    ctx.scale(10, 10)
-    ctx.rectangle(0, 0, width, height)
-    ctx.set_source_rgb(0.0, 0.0, 0.0)
-    ctx.fill()
-    for shape in translated_shapes:
-        draw_shape(shape, ctx)
-    surface.write_to_png(filename)
+    width = round((maxx + offset.x + 3.0) * SCALE)
+    height = round((maxy + offset.y + 3.0) * SCALE)
+    return translated_shapes, width, height
 
 
 @dataclass(frozen=True)
