@@ -123,20 +123,9 @@ class Shape:
 
     In practice a tuple of Hex is used for hashability.
 
-    A scaling factor is also included, so that we can always have an integer-coordinates
-    center of mass / vector mean. In normalized form the scale should always equal the
-    number of hexes in the shape, but we explicitly track the scale to allow
-    construction of denormalized shapes.
-
-    Hexes always use integer coordinates, so if a shape is constructed with a scale that
-    is not a factor of all coordinates of all hexes in the shape, normalization could
-    result in floor division and an InvalidHexError. In general manual Shape
-    construction should always use scale=1 and only normalization should re-scale.
-
     """
 
     hexes: FrozenSet[Hex]
-    _scale: int = 1
 
     @classmethod
     def of(cls, *hs: Hex) -> Shape:
@@ -145,42 +134,27 @@ class Shape:
 
     def translate(self, h: Hex) -> Shape:
         """Return a new Shape with all hexes translated by h."""
-        return Shape(frozenset(n + h for n in self.hexes), self._scale)
+        return Shape(frozenset(n + h for n in self.hexes))
 
     def rotate(self, steps: int = 1) -> Shape:
         """Return clockwise rotation of this shape (not normalized.)"""
-        return Shape(frozenset(h.rotate(steps) for h in self.hexes), self._scale)
+        return Shape(frozenset(h.rotate(steps) for h in self.hexes))
 
     def scale_up(self, factor: int) -> Shape:
         """Return this shape scaled up by given integer factor."""
-        return Shape(frozenset(n * factor for n in self.hexes), self._scale * factor)
+        return Shape(frozenset(n * factor for n in self.hexes))
 
     def scale_down(self, factor: int) -> Shape:
         """Return this shape scaled down by given integer factor."""
-        assert self._scale % factor == 0
-        return Shape(frozenset(n // factor for n in self.hexes), self._scale // factor)
-
-    def scale_to_one(self) -> Shape:
-        """Translate shape onto unit grid and scale down to scale == 1."""
-        if not self.hexes:
-            return self
-        sample_hex = sorted(self.hexes)[0]
-        return self.translate(-sample_hex).scale_down(self._scale)
+        return Shape(frozenset(n // factor for n in self.hexes))
 
     def sum(self) -> Hex:
         """Return the vector sum of all hexes in this shape."""
         return reduce(lambda a, b: a + b, self.hexes, Hex(0, 0, 0))
 
     def mean(self) -> Hex:
-        """
-        Return the vector mean of all hexes in this shape.
-
-        Requires that shape is scaled to a multiple of N, where N is number of hexes in
-        shape.
-
-        """
+        """Return the vector mean of all hexes in this shape."""
         n = len(self.hexes)
-        assert self._scale % n == 0
         return self.sum() // n
 
     def normalize_translation(self) -> Shape:
@@ -193,11 +167,6 @@ class Shape:
         Requires that shape must initially have scale == 1.
 
         """
-        if not self.hexes:
-            return self
-        assert self._scale == 1
-        s = self.scale_up(len(self.hexes))
-        return s.translate(-s.mean())
 
     def normalize(self) -> Shape:
         """
@@ -206,7 +175,11 @@ class Shape:
         """
         if not self.hexes:
             return self
-        s = self.normalize_translation()
+        # Scale up to N so that vector mean must be a precise integer hex, then
+        # translate to make vector mean the origin. This will be stable in rotation.
+        scale = len(self.hexes)
+        s = self.scale_up(scale)
+        s = s.translate(-s.mean())
         rotations = [s.rotate(i) for i in range(6)]
         ring = 1
         outer_ring = max(h.ring() for h in s.hexes)
@@ -221,7 +194,11 @@ class Shape:
             # If we still have >1 rotations, we have rotational symmetry
             for r in rotations[1:]:
                 assert r == rotations[0]
-        return rotations[0]
+        s = rotations[0]
+        # Now that we've normalized the rotation, translate back to where lowest hex
+        # -- in (q, r, s) tuple ordering -- is origin, and scale back down.
+        h = sorted(s.hexes)[0]
+        return s.translate(-h).scale_down(scale)
 
     def ring_sum(self, ring: int) -> int:
         """Return binary sum of a ring."""

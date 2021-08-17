@@ -88,9 +88,7 @@ class Shape:
 
     @classmethod
     def from_hex_shape(cls, hs: HexShape) -> Shape:
-        return Shape([LAYOUT.hex_to_point(h) for h in sorted(hs.hexes)]).scale(
-            1 / hs._scale
-        )
+        return Shape([LAYOUT.hex_to_point(h) for h in sorted(hs.hexes)])
 
     def bounding_box(self) -> Tuple[Point, Point]:
         if not self.points:

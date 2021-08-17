@@ -14,7 +14,6 @@ def extensions(base: Shape) -> Iterator[Shape]:
 
     """
     seen = set()
-    base = base.scale_to_one()
     for h in base.hexes:
         for d in DIRS:
             cand = h + d

@@ -14,9 +14,6 @@ class TestPoint:
         assert Point(1.0, 2.0) * 2 == Point(2.0, 4.0)
 
 
-s3o2 = math.sqrt(3.0) / 2.0
-
-
 class TestShape:
     @pytest.mark.parametrize(
         "hexshape,shape",
@@ -24,7 +21,7 @@ class TestShape:
             (HexShape.of(Hex(0, 0, 0)), Shape([Point(0.0, 0.0)])),
             (
                 HexShape.of(Hex(0, 1, -1), Hex(1, 0, -1)),
-                Shape([Point(0.0, -s3o2), Point(0.0, s3o2)]),
+                Shape([Point(0.0, 0.0), Point(0.0, math.sqrt(3.0))]),
             ),
         ],
     )

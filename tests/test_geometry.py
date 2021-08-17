@@ -171,42 +171,26 @@ class TestShape:
         "ins,outs",
         [
             (shape(), shape()),
-            (shape(Hex(1, 1, -2)), shape(Hex(0, 0, 0))),
-            (
-                shape(Hex(1, 2, -3), Hex(-3, 2, 1)),
-                shape(Hex(4, 0, -4), Hex(-4, 0, 4), _scale=2),
-            ),
-        ],
-    )
-    def test_normalize_translation(self, ins: Shape, outs: Shape) -> None:
-        assert ins.normalize_translation() == outs
-
-    @pytest.mark.parametrize(
-        "ins,outs",
-        [
-            (shape(), shape()),
             (
                 shape(Hex(0, -1, 1), Hex(0, -2, 2), Hex(-1, -2, 3)),
-                shape(Hex(-3, 1, 2), Hex(0, 1, -1), Hex(3, -2, -1), _scale=3),
+                shape(Hex(0, 0, 0), Hex(1, 0, -1), Hex(2, -1, -1)),
             ),
             (
                 shape(OR, DR, DR + UR, DR + UR + UR),
                 shape(
                     Hex(q=1, r=1, s=-2),
-                    Hex(q=-3, r=-3, s=6),
-                    Hex(q=1, r=-3, s=2),
-                    Hex(q=1, r=5, s=-6),
-                    _scale=4,
+                    Hex(q=0, r=0, s=0),
+                    Hex(q=1, r=0, s=-1),
+                    Hex(q=1, r=2, s=-3),
                 ),
             ),
             (
                 shape(OR, UP, UP + UR, UP + UR + UR),
                 shape(
                     Hex(q=1, r=1, s=-2),
-                    Hex(q=-3, r=-3, s=6),
-                    Hex(q=-3, r=1, s=2),
-                    Hex(q=5, r=1, s=-6),
-                    _scale=4,
+                    Hex(q=0, r=0, s=0),
+                    Hex(q=0, r=1, s=-1),
+                    Hex(q=2, r=1, s=-3),
                 ),
             ),
         ],
