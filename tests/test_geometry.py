@@ -110,6 +110,7 @@ class TestHex:
             (UP, 2, DR),
             (DR, 3, UL),
             (DN, 6, DN),
+            (UP, -1, UL),
         ],
     )
     def test_rotate(self, inh: Hex, times: int, outh: Hex) -> None:

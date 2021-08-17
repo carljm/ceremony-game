@@ -95,7 +95,7 @@ class Hex:
             sector = 2
             startd = DR
             key = self.r
-        else:
+        else:  # pragma: no cover
             raise ValueError(f"{self} is not in any sector.")
         if key > 0:
             sector += 3
