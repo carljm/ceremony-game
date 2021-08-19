@@ -4,10 +4,18 @@ from typing import Sequence
 import pytest
 
 from ceremony.geometry import Hex, Shape as HexShape, OR, UP
-from ceremony.render import Point, Shape, layout_shapes
+from ceremony.render import Point, Shape, layout_shapes, render_shapes
 
 
 SQRT3 = math.sqrt(3.0)
+
+
+class TestRenderShapes:
+    def test_render_shapes(self, tmpdir) -> None:
+        out = tmpdir / "test.png"
+        assert not out.exists()
+        render_shapes([HexShape.of(OR)], str(out))
+        assert out.exists()
 
 
 class TestLayoutShapes:
