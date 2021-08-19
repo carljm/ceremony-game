@@ -7,15 +7,7 @@ from ceremony.geometry import Shape, DIRS
 
 
 def extensions(base: Shape) -> Iterator[Shape]:
-    """
-    Yield all valid shapes derived from adding one hex to base shape.
-
-    Shapes must be contiguous. Base shape will be translated onto grid and scaled down
-    to scale == 1.
-
-    (TODO more validity restrictions.)
-
-    """
+    """Yield all contiguous shapes derived from adding one hex to base shape."""
     seen = set()
     for h in base.hexes:
         for d in DIRS:

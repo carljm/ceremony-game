@@ -9,6 +9,7 @@ class TestExtensions:
     @pytest.mark.parametrize(
         "ins,exts",
         [
+            (Shape.of(), []),
             (
                 Shape.of(OR),
                 [
