@@ -7,6 +7,9 @@ from ceremony.geometry import Hex, Shape as HexShape, OR, UP
 from ceremony.render import Point, Shape, layout_shapes
 
 
+SQRT3 = math.sqrt(3.0)
+
+
 class TestLayoutShapes:
     @pytest.mark.parametrize(
         "shapes,translated,width,height",
@@ -15,14 +18,14 @@ class TestLayoutShapes:
             ([HexShape.of(OR)], [Shape([Point(3.0, 3.0)])], 60, 60),
             (
                 [HexShape.of(OR, UP)],
-                [Shape([Point(3.0, 3.0), Point(3.0, 3.0 + math.sqrt(3.0))])],
+                [Shape([Point(3.0, 3.0), Point(3.0, 3.0 + SQRT3)])],
                 60,
                 77,
             ),
             (
                 [HexShape.of(OR, UP), HexShape.of(OR)],
                 [
-                    Shape([Point(3.0, 3.0), Point(3.0, 3.0 + math.sqrt(3.0))]),
+                    Shape([Point(3.0, 3.0), Point(3.0, 3.0 + SQRT3)]),
                     Shape([Point(6.0, 3.0)]),
                 ],
                 90,
@@ -62,7 +65,7 @@ class TestShape:
             (HexShape.of(Hex(0, 0, 0)), Shape([Point(0.0, 0.0)])),
             (
                 HexShape.of(Hex(0, 1, -1), Hex(1, 0, -1)),
-                Shape([Point(0.0, 0.0), Point(0.0, math.sqrt(3.0))]),
+                Shape([Point(0.0, 0.0), Point(0.0, SQRT3)]),
             ),
         ],
     )
