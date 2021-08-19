@@ -1,8 +1,8 @@
 import pytest
 from typing import Sequence
 
-from ceremony.geometry import Shape, OR, UP, UR, DR, DN
-from ceremony.generate import extensions, max_length
+from ceremony.geometry import Shape, OR, UP, UR, DR, DN, DL, UL
+from ceremony.generate import extensions, max_length, longest_line
 
 
 class TestExtensions:
@@ -41,3 +41,17 @@ class TestRules:
     )
     def test_max_length(self, shape: Shape, maxlen: int) -> None:
         assert max_length(shape) == maxlen
+
+    @pytest.mark.parametrize(
+        "shape,longest",
+        [
+            (Shape.of(OR), 1),
+            (Shape.of(OR, UP), 2),
+            (Shape.of(OR, UP, DN), 3),
+            (Shape.of(OR, UP, DN, DN + DR), 3),
+            (Shape.of(OR, UP, DN, DN + DR, DL, DL + UL), 4),
+            (Shape.of(OR, UP, DN, DN + DR, UL, DL + UL), 3),
+        ],
+    )
+    def test_longest_line(self, shape: Shape, longest: int) -> None:
+        assert longest_line(shape) == longest

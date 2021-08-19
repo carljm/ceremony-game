@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import groupby
 from typing import Iterator
 
 from ceremony.geometry import Shape, DIRS
@@ -28,7 +29,7 @@ def extensions(base: Shape) -> Iterator[Shape]:
 
 
 def max_length(shape: Shape) -> int:
-    """Return max length in any dimension.
+    """Return max length of shape in any dimension.
 
     So as to stick to integers, lengths are "doubled" -- single hex is 2, "half" hex
     is 1.
@@ -41,3 +42,23 @@ def max_length(shape: Shape) -> int:
     qs_dist = (q[-1] - q[0]) + (s[-1] - s[0])
     rs_dist = (r[-1] - r[0]) + (s[-1] - s[0])
     return max(qr_dist, qs_dist, rs_dist)
+
+
+def longest_line(shape: Shape) -> int:
+    """Return length of longest straight line in shape."""
+    max_line = 1
+    for dim1, dim2 in [("q", "r"), ("r", "s"), ("s", "q")]:
+        hexes = sorted(shape.hexes, key=lambda h: (getattr(h, dim1), getattr(h, dim2)))
+        for _d1val, row in groupby(hexes, lambda h: getattr(h, dim1)):
+            curlen = 0
+            lastv = None
+            for h in row:
+                v = getattr(h, dim2)
+                if lastv is None or v - lastv == 1:
+                    curlen += 1
+                else:
+                    curlen = 1
+                lastv = v
+            if curlen > max_line:
+                max_line = curlen
+    return max_line
