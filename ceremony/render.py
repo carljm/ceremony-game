@@ -43,6 +43,8 @@ def layout_shapes(hex_shapes: Iterable[HexShape]) -> Tuple[Sequence[Shape], int,
     overall needed canvas, scaled to pixel coordinates.
 
     """
+    if not hex_shapes:
+        return [], 0, 0
     shapes = [Shape.from_hex_shape(hs) for hs in hex_shapes]
     boxes = [s.bounding_box() for s in shapes]
     max_width = max(b[1].x - b[0].x for b in boxes)
@@ -52,7 +54,6 @@ def layout_shapes(hex_shapes: Iterable[HexShape]) -> Tuple[Sequence[Shape], int,
     # lay out shapes in a grid
     translated_shapes = []
     grid_x = 0
-    max_grid_x = 0
     grid_y = 0
     for s, b in zip(shapes, boxes):
         width = b[1].x - b[0].x
@@ -60,12 +61,11 @@ def layout_shapes(hex_shapes: Iterable[HexShape]) -> Tuple[Sequence[Shape], int,
         y_offset = (PAD + (padded_h * grid_y)) - b[0].y
         translated_shapes.append(s.translate(Point(x_offset, y_offset)))
         grid_x += 1
-        if grid_x > max_grid_x:
-            max_grid_x = grid_x
         if grid_x >= GRID_WIDTH:
             grid_x = 0
             grid_y += 1
     max_grid_y = grid_y + (1 if grid_x else 0)
+    max_grid_x = GRID_WIDTH if grid_y else grid_x
     width = round((PAD + (max_grid_x * padded_w)) * SCALE)
     height = round((PAD + (max_grid_y * padded_h)) * SCALE)
     return translated_shapes, width, height
@@ -132,7 +132,7 @@ class Shape:
 
 @dataclass(frozen=True)
 class Layout:
-    """A layout of cube-coordinate hexes on a 2d x/y screen."""
+    """A layout of cube-coordinate hexes on a cartesian plane."""
 
     orientation: Orientation
     size: Point
