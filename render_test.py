@@ -1,6 +1,6 @@
 import sys
 
-from ceremony.generate import extensions
+from ceremony.generate import extensions, max_length
 from ceremony.geometry import Shape, OR, UR
 from ceremony.render import render_shapes
 
@@ -14,7 +14,8 @@ def main(nodes: int) -> None:
         new = set()
         for shape in last:
             for ext in extensions(shape):
-                new.add(ext)
+                if max_length(ext) <= 8:
+                    new.add(ext)
         shapes.update(new)
         last = new
 
