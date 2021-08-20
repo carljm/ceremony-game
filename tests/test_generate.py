@@ -2,7 +2,25 @@ import pytest
 from typing import Sequence
 
 from ceremony.geometry import Shape, OR, UP, UR, DR, DN, DL, UL
-from ceremony.generate import extensions, max_length, longest_line
+from ceremony.generate import extensions, generate, max_length, longest_line
+
+
+class TestGenerage:
+    def test_generate(self) -> None:
+        shapes = generate(3)
+        assert shapes == {
+            Shape.of(DN, OR, UP),
+            Shape.of(OR, UP, UR),
+            Shape.of(DN, OR, UR),
+        }
+
+    def test_too_long(self) -> None:
+        shapes = generate(6)
+        assert Shape.of(DN + DN, DN, OR, UP, UP + UR, UP + UR + UP) not in shapes
+
+    def test_line_too_long(self) -> None:
+        shapes = generate(5)
+        assert Shape.of(DN + DN, DN, OR, UP, UP + UP) not in shapes
 
 
 class TestExtensions:

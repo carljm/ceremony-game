@@ -1,9 +1,25 @@
 from __future__ import annotations
 
 from itertools import groupby
-from typing import Iterator
+from typing import Collection, Iterator
 
-from ceremony.geometry import Shape, DIRS
+from ceremony.geometry import Shape, DIRS, OR, UR
+
+
+def generate(size: int) -> Collection[Shape]:
+    """Yield all valid size-node shapes."""
+    shapes = set([Shape.of(OR, UR)])
+
+    for i in range(size - 2):
+        new = set()
+        for shape in shapes:
+            for ext in extensions(shape):
+                ll = longest_line(ext)
+                if max_length(ext) <= 8 and ll < 5 and (i < 6 or ll >= 3):
+                    new.add(ext)
+        shapes = new
+
+    return shapes
 
 
 def extensions(base: Shape) -> Iterator[Shape]:
