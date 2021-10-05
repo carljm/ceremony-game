@@ -8,6 +8,7 @@ from ceremony.generate import (
     generate_diff_by_2,
     max_length,
     longest_line,
+    num_triangles,
 )
 
 
@@ -87,3 +88,20 @@ class TestRules:
     )
     def test_longest_line(self, shape: Shape, longest: int) -> None:
         assert longest_line(shape) == longest
+
+    @pytest.mark.parametrize(
+        "shape,num_tri",
+        [
+            (Shape.of(OR), 0),
+            (Shape.of(OR, UP), 0),
+            (Shape.of(OR, UP, DN), 0),
+            (Shape.of(OR, UP, UR), 1),
+            (Shape.of(OR, UP, UL), 1),
+            (Shape.of(OR, UP, DN, DL), 1),
+            (Shape.of(OR, UP, UL, UR), 2),
+            (Shape.of(OR, UP, UL, UR, UP + UR), 3),
+            (Shape.of(OR, UP, UR, DR, DN, DL, UL), 6),
+        ],
+    )
+    def test_num_triangles(self, shape: Shape, num_tri: int) -> None:
+        assert num_triangles(shape) == num_tri

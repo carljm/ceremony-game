@@ -3,7 +3,7 @@ from __future__ import annotations
 from itertools import groupby
 from typing import Collection, Dict, Iterable, Iterator, Set
 
-from ceremony.geometry import Shape, DIRS, OR, UR
+from ceremony.geometry import Shape, DIRS, OR, UR, UP, UL
 
 
 def generate_all(size: int) -> Collection[Shape]:
@@ -24,7 +24,7 @@ def generate_all(size: int) -> Collection[Shape]:
 
 def generate_diff_by_2(shapes: Iterable[Shape]) -> Collection[Shape]:
     """
-    Yield all extensions of `shapes` where all yielded nodes differ by 2+ nodes.
+    Yield all extensions of `shapes` where all yielded shapes differ by 2+ nodes.
 
     Also enforces min straight line length of 3, in addition to max dimension length
     and maximum straight line of 4.
@@ -58,6 +58,18 @@ def extensions(base: Shape) -> Iterator[Shape]:
             if new not in seen:
                 seen.add(new)
                 yield new
+
+
+def num_triangles(shape: Shape) -> int:
+    """Return number of triangles in shape."""
+    ret = 0
+    for h in shape.hexes:
+        if (h + UP) in shape.hexes:
+            if (h + UR) in shape.hexes:
+                ret += 1
+            if (h + UL) in shape.hexes:
+                ret += 1
+    return ret
 
 
 def max_length(shape: Shape) -> int:

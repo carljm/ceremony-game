@@ -157,17 +157,6 @@ class Shape:
         n = len(self.hexes)
         return self.sum() // n
 
-    def normalize_translation(self) -> Shape:
-        """Return the same Shape in translationally normal form.
-
-        This means that the origin is also the center of mass (or vector mean) of the
-        shape. We scale the shape to N (where N is number of nodes) to ensure the vector
-        mean is an integer-coordinates hex.
-
-        Requires that shape must initially have scale == 1.
-
-        """
-
     def normalize(self) -> Shape:
         """
         Return same shape in translationally and rotationally normal form.
