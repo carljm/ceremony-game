@@ -1,9 +1,51 @@
 from __future__ import annotations
 
+import random
 from itertools import groupby
-from typing import Collection, Dict, Iterable, Iterator, Set
+from typing import Collection, Dict, Iterator, Set
 
 from ceremony.geometry import Shape, DIRS, OR, UR, UP, UL
+
+
+QUOTAS = [
+    (4, 28),
+    (3, 24),
+    (2, 18),
+    (1, 14),
+    (0, 10),
+]
+
+
+def generate() -> Collection[Shape]:
+    """
+    Yield a set of nine-node shapes meeting criteria.
+    """
+    eight_node_shapes = generate_all(8)
+    to_sources: Dict[int, Dict[Shape, Set[Shape]]] = {}
+    for shape in eight_node_shapes:
+        for ext in extensions(shape):
+            if max_length(ext) <= 8 and 3 <= longest_line(ext) < 5:
+                numtri = num_triangles(ext)
+                to_sources.setdefault(numtri, {}).setdefault(ext, set()).add(shape)
+
+    sources_seen: Set[Shape] = set()
+    shapes = []
+    for numtri, quota in QUOTAS:
+        shapes_sources = list(to_sources.get(numtri, {}).items())
+        random.shuffle(shapes_sources)
+        count = 0
+        for shape, sources in shapes_sources:
+            if not sources.intersection(sources_seen):
+                shapes.append(shape)
+                sources_seen.update(sources)
+                count += 1
+            if count >= quota:
+                print(f"Found {count} shapes with {numtri} triangles.")
+                break
+        else:  # pragma: no cover
+            print(f"Unable to find {quota} shapes with {numtri} triangles.")
+
+    return shapes
 
 
 def generate_all(size: int) -> Collection[Shape]:
@@ -18,30 +60,6 @@ def generate_all(size: int) -> Collection[Shape]:
                 if max_length(ext) <= 8 and longest_line(ext) < 5:
                     new.add(ext)
         shapes = new
-
-    return shapes
-
-
-def generate_diff_by_2(shapes: Iterable[Shape]) -> Collection[Shape]:
-    """
-    Yield all extensions of `shapes` where all yielded shapes differ by 2+ nodes.
-
-    Also enforces min straight line length of 3, in addition to max dimension length
-    and maximum straight line of 4.
-
-    """
-    to_sources: Dict[Shape, Set[Shape]] = {}
-    for shape in shapes:
-        for ext in extensions(shape):
-            if max_length(ext) <= 8 and 3 <= longest_line(ext) < 5:
-                to_sources.setdefault(ext, set()).add(shape)
-
-    sources_seen: Set[Shape] = set()
-    shapes = set()
-    for shape, sources in to_sources.items():
-        if not sources.intersection(sources_seen):
-            shapes.add(shape)
-            sources_seen.update(sources)
 
     return shapes
 

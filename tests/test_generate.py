@@ -1,11 +1,12 @@
 import pytest
+import random
 from typing import Sequence
 
 from ceremony.geometry import Shape, OR, UP, UR, DR, DN, DL, UL
 from ceremony.generate import (
     extensions,
+    generate,
     generate_all,
-    generate_diff_by_2,
     max_length,
     longest_line,
     num_triangles,
@@ -13,6 +14,11 @@ from ceremony.generate import (
 
 
 class TestGenerate:
+    def test_generate(self) -> None:
+        random.seed(1)
+        shapes = generate()
+        assert len(shapes) == 94
+
     def test_generate_all(self) -> None:
         shapes = generate_all(3)
         assert shapes == {
@@ -28,15 +34,6 @@ class TestGenerate:
     def test_line_too_long(self) -> None:
         shapes = generate_all(5)
         assert Shape.of(DN + DN, DN, OR, UP, UP + UP) not in shapes
-
-    def test_generate_diff_by_2(self) -> None:
-        shapes = generate_diff_by_2(generate_all(4))
-
-        assert shapes == {
-            Shape.of(UR, OR, UR + DR, UR + DR + DR, UR + DR + DR + DR),
-            Shape.of(UR, OR, UR + UR, UR + UR + DR, UR + UR + DR + UR),
-            Shape.of(UR, DR, OR, UR + DR, UR + UP),
-        }
 
     @pytest.mark.parametrize(
         "ins,exts",
