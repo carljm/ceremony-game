@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import reduce, total_ordering
-from typing import FrozenSet
+from typing import Dict, FrozenSet, List, Set, Tuple
 
 
 class InvalidHexError(Exception):
@@ -105,6 +105,10 @@ class Hex:
         return (sector * ring) + dist_from_start
 
 
+def distance(h1: Hex, h2: Hex) -> int:
+    return (h1 - h2).ring()
+
+
 OR = Hex(0, 0, 0)
 UP = Hex(0, 1, -1)
 UR = UP.rotate()
@@ -192,3 +196,38 @@ class Shape:
     def ring_sum(self, ring: int) -> int:
         """Return binary sum of a ring."""
         return sum(2 ** h.ring_index() for h in self.hexes if h.ring() == ring)
+
+
+def shape_distance(s1: Shape, s2: Shape) -> int:
+    """
+    Return "distance" between two shapes
+
+    Distance is defined as sum of squares of distance between nearest-paired hexes.
+
+    """
+    # map (hex1-idx, hex2-idx) to distance between them
+    distances: Dict[Tuple[int, int], int] = {}
+    # map a distance to a list of (hex1-idx, hex2-idx) at that distance
+    rev: Dict[int, List[Tuple[int, int]]] = {}
+    size: int = len(s1.hexes)
+    assert size == len(s2.hexes)
+    for i, h1 in enumerate(s1.hexes):
+        for j, h2 in enumerate(s2.hexes):
+            t = (i, j)
+            d = distance(h1, h2)
+            distances[t] = d
+            rev.setdefault(d, []).append(t)
+    seen1: Set[int] = set()
+    seen2: Set[int] = set()
+    ret: int = 0
+    pairs: int = 0
+    for dist in sorted(rev.keys()):
+        for i, j in rev[dist]:
+            if i in seen1 or j in seen2:
+                continue
+            ret += dist ** 2
+            seen1.add(i)
+            seen2.add(j)
+            pairs += 1
+    assert pairs == size
+    return ret

@@ -1,7 +1,20 @@
 import pytest
 from typing import Sequence, Tuple
 
-from ceremony.geometry import Hex, InvalidHexError, Shape, OR, UP, UR, DR, DN, DL, UL
+from ceremony.geometry import (
+    distance,
+    shape_distance,
+    Hex,
+    InvalidHexError,
+    Shape,
+    OR,
+    UP,
+    UR,
+    DR,
+    DN,
+    DL,
+    UL,
+)
 from .factory import shape
 
 
@@ -157,6 +170,16 @@ class TestHex:
         assert h.ring_index() == ring_index
 
 
+@pytest.mark.parametrize(
+    "h1,h2,dist",
+    [
+        (Hex(1, -2, 1), Hex(0, 3, -3), 5),
+    ],
+)
+def test_distance(h1: Hex, h2: Hex, dist: int) -> None:
+    assert distance(h1, h2) == dist
+
+
 class TestShape:
     @pytest.mark.parametrize(
         "ins,diff,outs",
@@ -212,3 +235,18 @@ class TestShape:
     )
     def test_ring_sum(self, s: Shape, sums: Tuple[int, ...]) -> None:
         assert (s.ring_sum(0), s.ring_sum(1), s.ring_sum(2)) == sums
+
+
+@pytest.mark.parametrize(
+    "s1,s2,dist",
+    [
+        (shape(), shape(), 0),
+        (shape(OR), shape(OR), 0),
+        (shape(OR, DN), shape(OR, DN), 0),
+        (shape(UP, OR, DN), shape(UL, OR, DN), 1),
+        (shape(UR, OR, DN), shape(UL, OR, DN), 4),
+        (shape(UR, DR, DR + DN), shape(UP, OR, DN), 3),
+    ],
+)
+def test_shape_distance(s1: Shape, s2: Shape, dist: int) -> None:
+    assert shape_distance(s1, s2) == dist
