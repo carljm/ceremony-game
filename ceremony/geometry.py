@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from functools import reduce, total_ordering
 from typing import Dict, FrozenSet, List, Set, Tuple
 
@@ -48,6 +49,16 @@ class Hex:
 
     def is_origin(self) -> bool:
         return self.q == self.r == self.s == 0
+
+    def reflect(self, axis: Axis) -> Hex:
+        """Return reflection of this hex across an axis."""
+        if axis == Axis.Q:
+            return Hex(self.q, self.s, self.r)
+        if axis == Axis.R:
+            return Hex(self.s, self.r, self.q)
+        if axis == Axis.S:
+            return Hex(self.r, self.q, self.s)
+        raise ValueError(f"unknown axis {axis}")
 
     def rotate(self, steps: int = 1) -> Hex:
         """Return clockwise rotation of this hex around origin.
@@ -118,6 +129,12 @@ DL = DN.rotate()
 UL = DL.rotate()
 
 DIRS = [UP, UR, DR, DN, DL, UL]
+
+
+class Axis(Enum):
+    Q = 0
+    R = 1
+    S = 2
 
 
 @dataclass(frozen=True)

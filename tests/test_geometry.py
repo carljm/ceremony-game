@@ -4,6 +4,7 @@ from typing import Sequence, Tuple
 from ceremony.geometry import (
     distance,
     shape_distance,
+    Axis,
     Hex,
     InvalidHexError,
     Shape,
@@ -168,6 +169,24 @@ class TestHex:
     )
     def test_ring_index(self, h: Hex, ring_index: int) -> None:
         assert h.ring_index() == ring_index
+
+    @pytest.mark.parametrize(
+        "h1,axis,h2",
+        [
+            (UP, Axis.Q, DN),
+            (UL, Axis.Q, DL),
+            (UR, Axis.Q, DR),
+            (UR, Axis.R, DL),
+            (UP, Axis.R, UL),
+            (DN, Axis.R, DR),
+            (UL, Axis.S, DR),
+            (DL, Axis.S, DN),
+            (UP, Axis.S, UR),
+        ],
+    )
+    def test_reflect(self, h1: Hex, axis: Axis, h2: hex) -> None:
+        assert h1.reflect(axis) == h2
+        assert h2.reflect(axis) == h1
 
 
 @pytest.mark.parametrize(
