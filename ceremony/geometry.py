@@ -56,9 +56,9 @@ class Hex:
             return Hex(self.q, self.s, self.r)
         if axis == Axis.R:
             return Hex(self.s, self.r, self.q)
-        if axis == Axis.S:
+        else:
+            assert axis == Axis.S
             return Hex(self.r, self.q, self.s)
-        raise ValueError(f"unknown axis {axis}")
 
     def rotate(self, steps: int = 1) -> Hex:
         """Return clockwise rotation of this hex around origin.
@@ -242,7 +242,7 @@ def shape_distance(s1: Shape, s2: Shape) -> int:
         for i, j in rev[dist]:
             if i in seen1 or j in seen2:
                 continue
-            ret += dist ** 2
+            ret += dist**2
             seen1.add(i)
             seen2.add(j)
             pairs += 1

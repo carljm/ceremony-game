@@ -184,7 +184,7 @@ class TestHex:
             (UP, Axis.S, UR),
         ],
     )
-    def test_reflect(self, h1: Hex, axis: Axis, h2: hex) -> None:
+    def test_reflect(self, h1: Hex, axis: Axis, h2: Hex) -> None:
         assert h1.reflect(axis) == h2
         assert h2.reflect(axis) == h1
 
