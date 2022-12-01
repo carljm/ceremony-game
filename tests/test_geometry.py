@@ -255,6 +255,20 @@ class TestShape:
     def test_ring_sum(self, s: Shape, sums: Tuple[int, ...]) -> None:
         assert (s.ring_sum(0), s.ring_sum(1), s.ring_sum(2)) == sums
 
+    @pytest.mark.parametrize(
+        "ins,axis,outs",
+        [
+            (shape(), Axis.Q, shape()),
+            (shape(OR), Axis.Q, shape(OR)),
+            (shape(UP), Axis.Q, shape(DN)),
+            (shape(OR, UP), Axis.Q, shape(OR, DN)),
+            (shape(OR, DL), Axis.R, shape(OR, UR)),
+            (shape(OR, UL), Axis.S, shape(OR, DR)),
+        ],
+    )
+    def test_reflect(self, ins: Shape, axis: Axis, outs: Shape) -> None:
+        assert ins.reflect(axis) == outs
+
 
 @pytest.mark.parametrize(
     "s1,s2,dist",

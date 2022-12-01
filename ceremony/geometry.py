@@ -161,6 +161,10 @@ class Shape:
         """Return clockwise rotation of this shape (not normalized.)"""
         return Shape(frozenset(h.rotate(steps) for h in self.hexes))
 
+    def reflect(self, axis: Axis) -> Shape:
+        """Return reflection of this shape (not normalized.)"""
+        return Shape(frozenset(h.reflect(axis) for h in self.hexes))
+
     def scale_up(self, factor: int) -> Shape:
         """Return this shape scaled up by given integer factor."""
         return Shape(frozenset(n * factor for n in self.hexes))
