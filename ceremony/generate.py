@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import random
 from itertools import groupby
+from random import shuffle
 from typing import Collection, Dict, Iterator, Set
 
 from ceremony.geometry import Shape, DIRS, OR, UR, UP, UL
@@ -32,7 +32,8 @@ def generate() -> Collection[Shape]:
     shapes = []
     for numtri, quota in QUOTAS:
         shapes_sources = list(to_sources.get(numtri, {}).items())
-        random.shuffle(shapes_sources)
+        shuffle(shapes_sources)
+        shapes_sources.sort(key=lambda t: t[0].asymmetry())
         count = 0
         for shape, sources in shapes_sources:
             if not sources.intersection(sources_seen):

@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache, reduce, total_ordering
-from itertools import permutations
-from typing import cast, Dict, FrozenSet, Tuple
+from scipy.optimize import linear_sum_assignment
+from typing import FrozenSet
+import numpy as np
 
 
 class InvalidHexError(Exception):
@@ -222,6 +223,7 @@ class Shape:
         """Return binary sum of a ring."""
         return sum(2 ** h.ring_index() for h in self.hexes if h.ring() == ring)
 
+    @lru_cache(maxsize=None)
     def asymmetry(self) -> int:
         """Minimum asymmetry (rotational or mirror)."""
         return min(self.mirror_asymmetry(), self.rotational_asymmetry())
@@ -257,6 +259,7 @@ class Shape:
         return result
 
 
+@lru_cache(maxsize=None)
 def min_shape_distance(
     s1: Shape,
     s2: Shape,
@@ -283,25 +286,12 @@ def shape_distance(s1: Shape, s2: Shape) -> int:
     Distance is defined as sum of squares of distance between nearest-paired hexes.
 
     """
-    # map (hex1-idx, hex2-idx) to distance between them
-    distances: Dict[Tuple[int, int], int] = {}
     size: int = len(s1.hexes)
     assert size == len(s2.hexes)
-    # first calculate all distances just once
+    costs = np.empty((size, size), dtype=int)
     for i, h1 in enumerate(s1.hexes):
         for j, h2 in enumerate(s2.hexes):
-            t = (i, j)
             d = distance(h1, h2)
-            distances[t] = d
-    # now generate all possible pairing sets and their sum-squares distance
-    indices = list(range(size))
-    perms = permutations(indices)
-    mindist = None
-    for perm in perms:
-        dist = 0
-        for pair in zip(perm, indices):
-            pairdist = distances[cast(Tuple[int, int], tuple(pair))]
-            dist += pairdist**2
-        if mindist is None or dist < mindist:
-            mindist = dist
-    return mindist or 0
+            costs[i, j] = d**2
+    rows, cols = linear_sum_assignment(costs)
+    return costs[rows, cols].sum()
