@@ -1,6 +1,6 @@
 import pytest
 import random
-from typing import Sequence
+from typing import Collection
 
 from ceremony.geometry import Shape, OR, UP, UR, DR, DN, DL, UL
 from ceremony.generate import (
@@ -38,25 +38,25 @@ class TestGenerate:
     @pytest.mark.parametrize(
         "ins,exts",
         [
-            (Shape.of(), []),
+            (Shape.of(), set()),
             (
                 Shape.of(OR),
-                [
+                {
                     Shape.of(OR, UR),
-                ],
+                },
             ),
             (
                 Shape.of(OR, UP),
-                [
+                {
                     Shape.of(OR, UP, UR),
                     Shape.of(OR, UP, DR),
                     Shape.of(OR, UP, DN),
-                ],
+                },
             ),
         ],
     )
-    def test_extensions(self, ins: Shape, exts: Sequence[Shape]) -> None:
-        assert list(extensions(ins)) == exts
+    def test_extensions(self, ins: Shape, exts: Collection[Shape]) -> None:
+        assert set(extensions(ins)) == exts
 
 
 class TestRules:

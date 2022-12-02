@@ -3,6 +3,7 @@ from typing import Sequence, Tuple
 
 from ceremony.geometry import (
     distance,
+    min_shape_distance,
     shape_distance,
     Axis,
     Hex,
@@ -112,9 +113,9 @@ class TestHex:
         "inh,times,outh",
         [
             (Hex(0, 0, 0), 1, Hex(0, 0, 0)),
-            (Hex(1, 0, -1), 1, Hex(1, -1, 0)),
-            (Hex(1, -1, 0), 1, Hex(0, -1, 1)),
-            (Hex(1, 2, -3), 1, Hex(3, -1, -2)),
+            (Hex(1, 0, -1), 1, Hex(0, 1, -1)),
+            (Hex(1, -1, 0), 1, Hex(1, 0, -1)),
+            (Hex(1, 2, -3), 1, Hex(-2, 3, -1)),
             (UP, 1, UR),
             (UR, 1, DR),
             (DR, 1, DN),
@@ -132,12 +133,12 @@ class TestHex:
 
     def test_conveniences(self) -> None:
         assert OR == Hex(0, 0, 0)
-        assert UP == Hex(0, 1, -1)
-        assert UR == Hex(1, 0, -1)
-        assert DR == Hex(1, -1, 0)
-        assert DN == Hex(0, -1, 1)
-        assert DL == Hex(-1, 0, 1)
-        assert UL == Hex(-1, 1, 0)
+        assert UP == Hex(0, -1, 1)
+        assert UR == Hex(1, -1, 0)
+        assert DR == Hex(1, 0, -1)
+        assert DN == Hex(0, 1, -1)
+        assert DL == Hex(-1, 1, 0)
+        assert UL == Hex(-1, 0, 1)
 
     @pytest.mark.parametrize("h,ring", [(OR, 0), (UP, 1), (DN + DL, 2)])
     def test_ring(self, h: Hex, ring: int) -> None:
@@ -176,12 +177,12 @@ class TestHex:
             (UP, Axis.Q, DN),
             (UL, Axis.Q, DL),
             (UR, Axis.Q, DR),
-            (UR, Axis.R, DL),
-            (UP, Axis.R, UL),
-            (DN, Axis.R, DR),
-            (UL, Axis.S, DR),
-            (DL, Axis.S, DN),
-            (UP, Axis.S, UR),
+            (UR, Axis.S, DL),
+            (UP, Axis.S, UL),
+            (DN, Axis.S, DR),
+            (UL, Axis.R, DR),
+            (DL, Axis.R, DN),
+            (UP, Axis.R, UR),
         ],
     )
     def test_reflect(self, h1: Hex, axis: Axis, h2: Hex) -> None:
@@ -215,25 +216,25 @@ class TestShape:
         [
             (shape(), shape()),
             (
-                shape(Hex(0, -1, 1), Hex(0, -2, 2), Hex(-1, -2, 3)),
-                shape(Hex(0, 0, 0), Hex(1, 0, -1), Hex(2, -1, -1)),
+                shape(Hex(0, 1, -1), Hex(0, 2, -2), Hex(-1, 3, -2)),
+                shape(Hex(0, 0, 0), Hex(1, -1, 0), Hex(2, -1, -1)),
             ),
             (
                 shape(OR, DR, DR + UR, DR + UR + UR),
                 shape(
-                    Hex(q=1, r=1, s=-2),
+                    Hex(q=1, r=-2, s=1),
                     Hex(q=0, r=0, s=0),
-                    Hex(q=1, r=0, s=-1),
-                    Hex(q=1, r=2, s=-3),
+                    Hex(q=1, r=-1, s=0),
+                    Hex(q=1, r=-3, s=2),
                 ),
             ),
             (
                 shape(OR, UP, UP + UR, UP + UR + UR),
                 shape(
-                    Hex(q=1, r=1, s=-2),
+                    Hex(q=2, r=-2, s=0),
+                    Hex(q=1, r=-1, s=0),
                     Hex(q=0, r=0, s=0),
                     Hex(q=0, r=1, s=-1),
-                    Hex(q=2, r=1, s=-3),
                 ),
             ),
         ],
@@ -262,12 +263,26 @@ class TestShape:
             (shape(OR), Axis.Q, shape(OR)),
             (shape(UP), Axis.Q, shape(DN)),
             (shape(OR, UP), Axis.Q, shape(OR, DN)),
-            (shape(OR, DL), Axis.R, shape(OR, UR)),
-            (shape(OR, UL), Axis.S, shape(OR, DR)),
+            (shape(OR, DL), Axis.S, shape(OR, UR)),
+            (shape(OR, UL), Axis.R, shape(OR, DR)),
         ],
     )
     def test_reflect(self, ins: Shape, axis: Axis, outs: Shape) -> None:
         assert ins.reflect(axis) == outs
+
+    @pytest.mark.parametrize(
+        "ins,result",
+        [
+            (shape(), 0),
+            (shape(OR), 0),
+            (shape(OR, UP), 0),
+            (shape(OR, UP, UL), 0),
+            (shape(OR, UP, UP + UL), 1),
+            (shape(OR, UP, UP + UL, UP + UP), 1),
+        ],
+    )
+    def test_mirror_symmetry(self, ins: Shape, result: int) -> None:
+        assert ins.mirror_symmetry() == result
 
 
 @pytest.mark.parametrize(
@@ -277,7 +292,22 @@ class TestShape:
         (shape(OR), shape(OR), 0),
         (shape(OR, DN), shape(OR, DN), 0),
         (shape(UP, OR, DN), shape(UL, OR, DN), 1),
-        (shape(UR, OR, DN), shape(UL, OR, DN), 4),
+        (shape(UR, OR, DN), shape(UL, OR, DN), 2),
+        (shape(UR, DR, DR + DN), shape(UP, OR, DN), 0),
+    ],
+)
+def test_min_shape_distance(s1: Shape, s2: Shape, dist: int) -> None:
+    assert min_shape_distance(s1, s2) == dist
+
+
+@pytest.mark.parametrize(
+    "s1,s2,dist",
+    [
+        (shape(), shape(), 0),
+        (shape(OR), shape(OR), 0),
+        (shape(OR, DN), shape(OR, DN), 0),
+        (shape(UP, OR, DN), shape(UL, OR, DN), 1),
+        (shape(UR, OR, DN), shape(UL, OR, DN), 2),
         (shape(UR, DR, DR + DN), shape(UP, OR, DN), 3),
     ],
 )

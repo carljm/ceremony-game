@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from functools import reduce, total_ordering
-from typing import Dict, FrozenSet, List, Set, Tuple
+from itertools import permutations
+from typing import cast, Dict, FrozenSet, Tuple
 
 
 class InvalidHexError(Exception):
@@ -18,6 +19,9 @@ class Hex:
     q, r, and s must always total to zero.
 
     See https://www.redblobgames.com/grids/hexagons/ for details.
+
+    We model the hexes with flat side up; the "up" direction is
+    (q-0, r=-1, s=1), "up right" is (q=1, r=-1, s=0), etc.
 
     """
 
@@ -76,9 +80,9 @@ class Hex:
         if steps % 2:
             q, r, s = -q, -r, -s
         if steps == 1 or steps == 4:
-            q, r, s = s, q, r
-        elif steps == 2 or steps == 5:
             q, r, s = r, s, q
+        elif steps == 2 or steps == 5:
+            q, r, s = s, q, r
         return Hex(q, r, s)
 
     def ring(self) -> int:
@@ -94,18 +98,18 @@ class Hex:
             return 0
         ring = self.ring()
         a_q, a_r, a_s = abs(self.q), abs(self.r), abs(self.s)
-        if a_s > a_q and a_s >= a_r:
+        if a_r > a_q and a_r >= a_s:
             sector = 0
             startd = UP
-            key = self.s
-        elif a_q > a_r and a_q >= a_s:
+            key = self.r
+        elif a_q > a_s and a_q >= a_r:
             sector = 1
             startd = UR
             key = -self.q
-        elif a_r > a_s and a_r >= a_q:
+        elif a_s > a_r and a_s >= a_q:
             sector = 2
             startd = DR
-            key = self.r
+            key = self.s
         else:  # pragma: no cover
             raise ValueError(f"{self} is not in any sector.")
         if key > 0:
@@ -121,7 +125,7 @@ def distance(h1: Hex, h2: Hex) -> int:
 
 
 OR = Hex(0, 0, 0)
-UP = Hex(0, 1, -1)
+UP = Hex(0, -1, 1)
 UR = UP.rotate()
 DR = UR.rotate()
 DN = DR.rotate()
@@ -218,6 +222,35 @@ class Shape:
         """Return binary sum of a ring."""
         return sum(2 ** h.ring_index() for h in self.hexes if h.ring() == ring)
 
+    def mirror_symmetry(self) -> int:
+        result = None
+        norm = self.normalize()
+        for axis in Axis:
+            reflection = norm.reflect(axis)
+            distance = min_shape_distance(norm, reflection)
+            if result is None or distance < result:
+                result = distance
+        assert result is not None
+        return result
+
+
+def min_shape_distance(
+    s1: Shape,
+    s2: Shape,
+) -> int:
+    """Return minimum shape distance reachable via translation."""
+    min_dist = shape_distance(s1, s2)
+    min_trans = s1
+    for d in DIRS:
+        trans = s1.translate(d)
+        trans_dist = shape_distance(trans, s2)
+        if trans_dist < min_dist:
+            min_dist = trans_dist
+            min_trans = trans
+    if min_trans != s1:
+        return min_shape_distance(min_trans, s2)
+    return min_dist
+
 
 def shape_distance(s1: Shape, s2: Shape) -> int:
     """
@@ -228,27 +261,23 @@ def shape_distance(s1: Shape, s2: Shape) -> int:
     """
     # map (hex1-idx, hex2-idx) to distance between them
     distances: Dict[Tuple[int, int], int] = {}
-    # map a distance to a list of (hex1-idx, hex2-idx) at that distance
-    rev: Dict[int, List[Tuple[int, int]]] = {}
     size: int = len(s1.hexes)
     assert size == len(s2.hexes)
+    # first calculate all distances just once
     for i, h1 in enumerate(s1.hexes):
         for j, h2 in enumerate(s2.hexes):
             t = (i, j)
             d = distance(h1, h2)
             distances[t] = d
-            rev.setdefault(d, []).append(t)
-    seen1: Set[int] = set()
-    seen2: Set[int] = set()
-    ret: int = 0
-    pairs: int = 0
-    for dist in sorted(rev.keys()):
-        for i, j in rev[dist]:
-            if i in seen1 or j in seen2:
-                continue
-            ret += dist**2
-            seen1.add(i)
-            seen2.add(j)
-            pairs += 1
-    assert pairs == size
-    return ret
+    # now generate all possible pairing sets and their sum-squares distance
+    indices = list(range(size))
+    perms = permutations(indices)
+    mindist = None
+    for perm in perms:
+        dist = 0
+        for pair in zip(perm, indices):
+            pairdist = distances[cast(Tuple[int, int], tuple(pair))]
+            dist += pairdist**2
+        if mindist is None or dist < mindist:
+            mindist = dist
+    return mindist or 0
