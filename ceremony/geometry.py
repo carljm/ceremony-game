@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from functools import reduce, total_ordering
+from functools import lru_cache, reduce, total_ordering
 from itertools import permutations
 from typing import cast, Dict, FrozenSet, Tuple
 
@@ -222,10 +222,15 @@ class Shape:
         """Return binary sum of a ring."""
         return sum(2 ** h.ring_index() for h in self.hexes if h.ring() == ring)
 
-    def symmetry(self) -> int:
-        return min(self.mirror_symmetry(), self.rotational_symmetry())
+    def asymmetry(self) -> int:
+        """Minimum asymmetry (rotational or mirror)."""
+        return min(self.mirror_asymmetry(), self.rotational_asymmetry())
 
-    def mirror_symmetry(self) -> int:
+    def mirror_asymmetry(self) -> int:
+        """Return a measure of shape's mirror asymmetry.
+
+        Minimum shape distance resulting from reflection across any of 3 axes.
+        """
         result = None
         norm = self.normalize()
         for axis in Axis:
@@ -236,7 +241,11 @@ class Shape:
         assert result is not None
         return result
 
-    def rotational_symmetry(self) -> int:
+    def rotational_asymmetry(self) -> int:
+        """Return a measure of shape's rotational asymmetry.
+
+        Minimim shape distance resulting from five possible rotations.
+        """
         result = None
         norm = self.normalize()
         rotations = [norm.rotate(i + 1) for i in range(5)]
@@ -266,6 +275,7 @@ def min_shape_distance(
     return min_dist
 
 
+@lru_cache(maxsize=None)
 def shape_distance(s1: Shape, s2: Shape) -> int:
     """
     Return "distance" between two shapes
