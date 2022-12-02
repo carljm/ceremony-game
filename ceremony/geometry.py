@@ -222,6 +222,9 @@ class Shape:
         """Return binary sum of a ring."""
         return sum(2 ** h.ring_index() for h in self.hexes if h.ring() == ring)
 
+    def symmetry(self) -> int:
+        return min(self.mirror_symmetry(), self.rotational_symmetry())
+
     def mirror_symmetry(self) -> int:
         result = None
         norm = self.normalize()
@@ -230,6 +233,17 @@ class Shape:
             distance = min_shape_distance(norm, reflection)
             if result is None or distance < result:
                 result = distance
+        assert result is not None
+        return result
+
+    def rotational_symmetry(self) -> int:
+        result = None
+        norm = self.normalize()
+        rotations = [norm.rotate(i + 1) for i in range(5)]
+        for r in rotations:
+            dist = min_shape_distance(norm, r)
+            if result is None or dist < result:
+                result = dist
         assert result is not None
         return result
 

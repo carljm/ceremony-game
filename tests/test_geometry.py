@@ -279,10 +279,41 @@ class TestShape:
             (shape(OR, UP, UL), 0),
             (shape(OR, UP, UP + UL), 1),
             (shape(OR, UP, UP + UL, UP + UP), 1),
+            (shape(OR, UP, UP + UL, DN, DN + DR), 2),
         ],
     )
     def test_mirror_symmetry(self, ins: Shape, result: int) -> None:
         assert ins.mirror_symmetry() == result
+
+    @pytest.mark.parametrize(
+        "ins,result",
+        [
+            (shape(), 0),
+            (shape(OR), 0),
+            (shape(OR, UP), 0),
+            (shape(OR, UP, UL), 0),
+            (shape(OR, UP, UP + UL), 1),
+            (shape(OR, UP, UP + UL, UP + UP), 2),
+            (shape(OR, UP, UP + UL, DN, DN + DR), 0),
+        ],
+    )
+    def test_rotational_symmetry(self, ins: Shape, result: int) -> None:
+        assert ins.rotational_symmetry() == result
+
+    @pytest.mark.parametrize(
+        "ins,result",
+        [
+            (shape(), 0),
+            (shape(OR), 0),
+            (shape(OR, UP), 0),
+            (shape(OR, UP, UL), 0),
+            (shape(OR, UP, UP + UL), 1),
+            (shape(OR, UP, UP + UL, UP + UP), 1),
+            (shape(OR, UP, UP + UL, DN, DN + DR), 0),
+        ],
+    )
+    def test_symmetry(self, ins: Shape, result: int) -> None:
+        assert ins.symmetry() == result
 
 
 @pytest.mark.parametrize(
